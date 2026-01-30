@@ -168,77 +168,77 @@ const drawHeader = (doc, t, isRTL) => {
 /**
  * Draw statistics cards
  */
-const drawStatistics = (doc, votes, pollInfo, t, isRTL, startY) => {
-  const cardWidth = 160;
-  const cardHeight = 80;
-  const spacing = 20;
-  const totalCards = 2;
-  const totalWidth = (cardWidth * totalCards) + (spacing * (totalCards - 1));
-  const startX = (doc.page.width - totalWidth) / 2;
+// const drawStatistics = (doc, votes, pollInfo, t, isRTL, startY) => {
+//   const cardWidth = 160;
+//   const cardHeight = 80;
+//   const spacing = 20;
+//   const totalCards = 2;
+//   const totalWidth = (cardWidth * totalCards) + (spacing * (totalCards - 1));
+//   const startX = (doc.page.width - totalWidth) / 2;
 
-  const cards = [
-    {
-      title: t.totalVotes,
-      value: pollInfo.totalVotes || votes.length,
-      color: colors.primary,
-      icon: "📊",
-    },
-    {
-      title: t.filteredVotes,
-      value: pollInfo.filteredVotes || votes.length,
-      color: colors.secondary,
-      icon: "🔍",
-    },
-  ];
+//   const cards = [
+//     {
+//       title: t.totalVotes,
+//       value: pollInfo.totalVotes || votes.length,
+//       color: colors.primary,
+//       icon: "📊",
+//     },
+//     {
+//       title: t.filteredVotes,
+//       value: pollInfo.filteredVotes || votes.length,
+//       color: colors.secondary,
+//       icon: "🔍",
+//     },
+//   ];
 
-  let currentX = startX;
+//   let currentX = startX;
 
-  cards.forEach((card) => {
-    // Card shadow
-    doc.save();
-    doc.fillColor("#00000015")
-       .rect(currentX + 2, startY + 2, cardWidth, cardHeight)
-       .fill();
-    doc.restore();
+//   cards.forEach((card) => {
+//     // Card shadow
+//     doc.save();
+//     doc.fillColor("#00000015")
+//        .rect(currentX + 2, startY + 2, cardWidth, cardHeight)
+//        .fill();
+//     doc.restore();
 
-    // Card background
-    doc.save();
-    doc.fillColor(colors.white)
-       .strokeColor(colors.border)
-       .lineWidth(1)
-       .rect(currentX, startY, cardWidth, cardHeight)
-       .fillAndStroke();
-    doc.restore();
+//     // Card background
+//     doc.save();
+//     doc.fillColor(colors.white)
+//        .strokeColor(colors.border)
+//        .lineWidth(1)
+//        .rect(currentX, startY, cardWidth, cardHeight)
+//        .fillAndStroke();
+//     doc.restore();
 
-    // Card accent bar
-    doc.save();
-    doc.fillColor(card.color)
-       .rect(currentX, startY, cardWidth, 4)
-       .fill();
-    doc.restore();
+//     // Card accent bar
+//     doc.save();
+//     doc.fillColor(card.color)
+//        .rect(currentX, startY, cardWidth, 4)
+//        .fill();
+//     doc.restore();
 
-    // Card content
-    doc.fillColor(colors.textLight)
-       .font(isRTL ? "Arabic" : "English")
-       .fontSize(10)
-       .text(card.title, currentX + 15, startY + 20, {
-         width: cardWidth - 30,
-         align: "left",
-       });
+//     // Card content
+//     doc.fillColor(colors.textLight)
+//        .font(isRTL ? "Arabic" : "English")
+//        .fontSize(10)
+//        .text(card.title, currentX + 15, startY + 20, {
+//          width: cardWidth - 30,
+//          align: "left",
+//        });
 
-    doc.fillColor(card.color)
-       .font(isRTL ? "Arabic-Bold" : "English-Bold")
-       .fontSize(24)
-       .text(card.value.toString(), currentX + 15, startY + 40, {
-         width: cardWidth - 30,
-         align: "left",
-       });
+//     doc.fillColor(card.color)
+//        .font(isRTL ? "Arabic-Bold" : "English-Bold")
+//        .fontSize(24)
+//        .text(card.value.toString(), currentX + 15, startY + 40, {
+//          width: cardWidth - 30,
+//          align: "left",
+//        });
 
-    currentX += cardWidth + spacing;
-  });
+//     currentX += cardWidth + spacing;
+//   });
 
-  return startY + cardHeight + 30;
-};
+//   return startY + cardHeight + 30;
+// };
 
 /**
  * Draw vote breakdown chart (text-based bars)
@@ -591,7 +591,7 @@ const generatePollPDF = (votes, pollInfo = {}, options = {}) => {
       let currentY = drawHeader(doc, t, isRTL);
 
       // Draw statistics cards
-      currentY = drawStatistics(doc, votes, pollInfo, t, isRTL, currentY);
+      // currentY = drawStatistics(doc, votes, pollInfo, t, isRTL, currentY); 
 
       // Draw vote breakdown
       currentY = drawVoteBreakdown(doc, votes, t, isRTL, currentY);
