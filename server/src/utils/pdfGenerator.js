@@ -532,9 +532,9 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
     doc.restore();
 
     // Cell data (same order for both LTR and RTL)
-    // const reversedTitle = reverseArabicText(sanitizedName);
+
     const cellData = [
-      isRTL ? reverseArabicText(sanitizedName) : sanitizedName,
+      sanitizedName,
       sanitizedPhone,
       sanitizedAnswer,
       sanitizedDate,
