@@ -232,19 +232,19 @@ const generatePollPDF = (votes, pollInfo = {}, options = {}) => {
 
       doc.registerFont(
         "Arabic",
-        path.join(__dirname, "../fonts/Inter/static/Rubik-Regular.ttf"),
+        path.join(__dirname, "../assets/fonts/Inter/static/Rubik-Regular.ttf"),
       );
       doc.registerFont(
         "Arabic-Bold",
-        path.join(__dirname, "../fonts/Inter/static/Rubik-Bold.ttf"),
+        path.join(__dirname, "../assets/fonts/Inter/static/Rubik-Bold.ttf"),
       );
       doc.registerFont(
         "English",
-        path.join(__dirname, "../fonts/Inter/static/Inter-Regular.ttf"),
+        path.join(__dirname, "../assets/fonts/Inter/static/Inter-Regular.ttf"),
       );
       doc.registerFont(
         "English-Bold",
-        path.join(__dirname, "../fonts/Inter/static/Inter-Bold.ttf"),
+        path.join(__dirname, "../assets/fonts/Inter/static/Inter-Bold.ttf"),
       );
 
       doc.addPage();
