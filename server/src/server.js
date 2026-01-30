@@ -29,6 +29,7 @@ const getAllowedOrigins = () => {
     normalizeOrigin(process.env.FRONTEND_URL),
     "http://localhost:3000",
     "http://localhost:5173",
+    "https://cbosra-poll.vercel.app", // Production frontend
   ].filter(Boolean); // Remove null/undefined values
 
   return origins;
