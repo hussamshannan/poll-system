@@ -132,6 +132,23 @@ const isArabic = (text) => {
 };
 
 /**
+ * Reverse Arabic text for proper RTL display in PDF
+ * PDFKit doesn't handle RTL automatically, so we need to reverse the text
+ */
+const reverseArabicText = (text) => {
+  if (!text || typeof text !== "string") return text;
+
+  // Split by spaces to preserve word boundaries
+  const words = text.split(" ");
+
+  // Reverse the order of words
+  const reversedWords = words.reverse();
+
+  // Join back together
+  return reversedWords.join(" ");
+};
+
+/**
  * Draw a modern header with gradient-like effect
  */
 const drawHeader = (doc, t, isRTL) => {
@@ -146,14 +163,14 @@ const drawHeader = (doc, t, isRTL) => {
   // Title
   doc.fillColor(colors.white);
   if (isRTL) {
-    // RTL: Right-aligned with proper directionality
+    // RTL: Reverse text and center align
+    const reversedTitle = reverseArabicText(t.title);
     doc
       .font("Arabic-Bold")
       .fontSize(28)
-      .text(t.title, 50, 30, {
-        width: pageWidth - 100,
+      .text(reversedTitle, 0, 30, {
+        width: pageWidth,
         align: "center",
-        features: ['rtla'], // Enable RTL Arabic features
       });
   } else {
     // LTR: Center aligned
@@ -168,13 +185,14 @@ const drawHeader = (doc, t, isRTL) => {
 
   // Subtitle
   if (isRTL) {
-    // RTL: Right-aligned with proper directionality
+    // RTL: Reverse text and center align
+    const reversedSubtitle = reverseArabicText(t.subtitle);
     doc
       .font("Arabic")
       .fontSize(14)
       .fillColor("#e3f2fd")
-      .text(t.subtitle, 50, 70, {
-        width: pageWidth - 100,
+      .text(reversedSubtitle, 0, 70, {
+        width: pageWidth,
         align: "center",
       });
   } else {
@@ -201,11 +219,12 @@ const drawVoteBreakdown = (doc, votes, t, isRTL, startY) => {
 
   // Section title
   if (isRTL) {
+    const reversedTitle = reverseArabicText(t.voteBreakdown);
     doc
       .fillColor(colors.text)
       .font("Arabic-Bold")
       .fontSize(16)
-      .text(t.voteBreakdown, 50, startY, {
+      .text(reversedTitle, 50, startY, {
         width: pageWidth - 100,
         align: "right"
       });
@@ -256,11 +275,12 @@ const drawVoteBreakdown = (doc, votes, t, isRTL, startY) => {
       doc.restore();
 
       // Percentage text inside bar
+      const percentageText = reverseArabicText(`(%${percentage}) ${t.votes} ${count}`);
       doc
         .fillColor(colors.text)
         .font("Arabic-Bold")
         .fontSize(10)
-        .text(`${count} ${t.votes} (${percentage}%)`, 50, y + 5, {
+        .text(percentageText, 50, y + 5, {
           align: "right",
           width: 400,
         });
@@ -317,11 +337,12 @@ const drawFiltersInfo = (doc, pollInfo, t, isRTL, startY) => {
   // Filters title
   const pageWidth = doc.page.width;
   if (isRTL) {
+    const reversedTitle = reverseArabicText(t.filters + ":");
     doc
       .fillColor(colors.text)
       .font("Arabic-Bold")
       .fontSize(12)
-      .text(t.filters + ":", 50, startY, {
+      .text(reversedTitle, 50, startY, {
         width: pageWidth - 100,
         align: "right"
       });
@@ -338,11 +359,12 @@ const drawFiltersInfo = (doc, pollInfo, t, isRTL, startY) => {
   // Filter by answer
   if (filters.answer && filters.answer !== "all" && filters.answer !== "الكل") {
     if (isRTL) {
+      const reversedText = reverseArabicText(`${filters.answer} :${t.filterBy}`);
       doc
         .fillColor(colors.textLight)
         .font("Arabic")
         .fontSize(10)
-        .text(`${t.filterBy}: ${filters.answer}`, 70, y, {
+        .text(reversedText, 70, y, {
           width: pageWidth - 140,
           align: "right"
         });
@@ -360,11 +382,12 @@ const drawFiltersInfo = (doc, pollInfo, t, isRTL, startY) => {
   if (filters.search && filters.search.trim() !== "") {
     const sanitizedSearch = sanitizeText(filters.search, 50);
     if (isRTL) {
+      const reversedText = reverseArabicText(`${sanitizedSearch} :${t.searchTerm}`);
       doc
         .fillColor(colors.textLight)
         .font("Arabic")
         .fontSize(10)
-        .text(`${t.searchTerm}: ${sanitizedSearch}`, 70, y, {
+        .text(reversedText, 70, y, {
           width: pageWidth - 140,
           align: "right"
         });
@@ -396,11 +419,12 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
   // Section title
   const pageWidth = doc.page.width;
   if (isRTL) {
+    const reversedTitle = reverseArabicText(t.voterDetails);
     doc
       .fillColor(colors.text)
       .font("Arabic-Bold")
       .fontSize(16)
-      .text(t.voterDetails, 50, startY, {
+      .text(reversedTitle, 50, startY, {
         width: pageWidth - 100,
         align: "right"
       });
@@ -465,11 +489,12 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
       }
     }
 
+    const headerText = isRTL ? reverseArabicText(header) : header;
     doc
       .fillColor(colors.white)
       .font(isRTL ? "Arabic-Bold" : "English-Bold")
       .fontSize(11)
-      .text(header, currentX + 10, y + 10, {
+      .text(headerText, currentX + 10, y + 10, {
         width: colWidths[index] - 20,
         align: isRTL ? "right" : "left",
       });
@@ -541,11 +566,14 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
       const cellIsArabic = isArabic(data);
       const font = cellIsArabic ? "Arabic" : "English";
 
+      // Reverse Arabic text for proper RTL display
+      const cellText = (isRTL && cellIsArabic) ? reverseArabicText(data) : data;
+
       doc
         .fillColor(colors.text)
         .font(font)
         .fontSize(9)
-        .text(data, currentX + 10, y + 10, {
+        .text(cellText, currentX + 10, y + 10, {
           width: colWidths[cellIndex] - 20,
           align: isRTL || cellIsArabic ? "right" : "left",
           ellipsis: true,
@@ -584,20 +612,29 @@ const drawFooter = (doc, t, isRTL, pageNum, totalPages) => {
     minute: "2-digit",
   });
 
+  const generatedText = isRTL
+    ? reverseArabicText(`${generatedDate} :${t.generatedOn}`)
+    : `${t.generatedOn}: ${generatedDate}`;
+
   doc
     .fillColor(colors.textLight)
     .font(isRTL ? "Arabic" : "English")
     .fontSize(8)
-    .text(`${t.generatedOn}: ${generatedDate}`, 50, pageHeight - 50, {
+    .text(generatedText, 50, pageHeight - 50, {
       align: isRTL ? "right" : "left",
+      width: pageWidth - 100,
     });
 
   // Page number
+  const pageText = isRTL
+    ? reverseArabicText(`${totalPages} ${t.of} ${pageNum} ${t.page}`)
+    : `${t.page} ${pageNum} ${t.of} ${totalPages}`;
+
   doc
     .fillColor(colors.textLight)
     .font(isRTL ? "Arabic" : "English")
     .fontSize(8)
-    .text(`${t.page} ${pageNum} ${t.of} ${totalPages}`, 0, pageHeight - 50, {
+    .text(pageText, 0, pageHeight - 50, {
       align: "center",
       width: pageWidth,
     });
