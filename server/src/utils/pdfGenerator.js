@@ -165,22 +165,16 @@ const drawHeader = (doc, t, isRTL) => {
   if (isRTL) {
     // RTL: Reverse text and center align
     const reversedTitle = reverseArabicText(t.title);
-    doc
-      .font("Arabic-Bold")
-      .fontSize(28)
-      .text(reversedTitle, 0, 30, {
-        width: pageWidth,
-        align: "center",
-      });
+    doc.font("Arabic-Bold").fontSize(28).text(reversedTitle, 0, 30, {
+      width: pageWidth,
+      align: "center",
+    });
   } else {
     // LTR: Center aligned
-    doc
-      .font("English-Bold")
-      .fontSize(28)
-      .text(t.title, 0, 30, {
-        align: "center",
-        width: pageWidth,
-      });
+    doc.font("English-Bold").fontSize(28).text(t.title, 0, 30, {
+      align: "center",
+      width: pageWidth,
+    });
   }
 
   // Subtitle
@@ -226,7 +220,7 @@ const drawVoteBreakdown = (doc, votes, t, isRTL, startY) => {
       .fontSize(16)
       .text(reversedTitle, 50, startY, {
         width: pageWidth - 100,
-        align: "right"
+        align: "right",
       });
   } else {
     doc
@@ -275,7 +269,9 @@ const drawVoteBreakdown = (doc, votes, t, isRTL, startY) => {
       doc.restore();
 
       // Percentage text inside bar
-      const percentageText = reverseArabicText(`(%${percentage}) ${t.votes} ${count}`);
+      const percentageText = reverseArabicText(
+        `(%${percentage}) ${t.votes} ${count}`,
+      );
       doc
         .fillColor(colors.text)
         .font("Arabic-Bold")
@@ -344,7 +340,7 @@ const drawFiltersInfo = (doc, pollInfo, t, isRTL, startY) => {
       .fontSize(12)
       .text(reversedTitle, 50, startY, {
         width: pageWidth - 100,
-        align: "right"
+        align: "right",
       });
   } else {
     doc
@@ -359,14 +355,16 @@ const drawFiltersInfo = (doc, pollInfo, t, isRTL, startY) => {
   // Filter by answer
   if (filters.answer && filters.answer !== "all" && filters.answer !== "الكل") {
     if (isRTL) {
-      const reversedText = reverseArabicText(`${filters.answer} :${t.filterBy}`);
+      const reversedText = reverseArabicText(
+        `${filters.answer} :${t.filterBy}`,
+      );
       doc
         .fillColor(colors.textLight)
         .font("Arabic")
         .fontSize(10)
         .text(reversedText, 70, y, {
           width: pageWidth - 140,
-          align: "right"
+          align: "right",
         });
     } else {
       doc
@@ -382,14 +380,16 @@ const drawFiltersInfo = (doc, pollInfo, t, isRTL, startY) => {
   if (filters.search && filters.search.trim() !== "") {
     const sanitizedSearch = sanitizeText(filters.search, 50);
     if (isRTL) {
-      const reversedText = reverseArabicText(`${sanitizedSearch} :${t.searchTerm}`);
+      const reversedText = reverseArabicText(
+        `${sanitizedSearch} :${t.searchTerm}`,
+      );
       doc
         .fillColor(colors.textLight)
         .font("Arabic")
         .fontSize(10)
         .text(reversedText, 70, y, {
           width: pageWidth - 140,
-          align: "right"
+          align: "right",
         });
     } else {
       doc
@@ -426,7 +426,7 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
       .fontSize(16)
       .text(reversedTitle, 50, startY, {
         width: pageWidth - 100,
-        align: "right"
+        align: "right",
       });
   } else {
     doc
@@ -532,8 +532,9 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
     doc.restore();
 
     // Cell data (same order for both LTR and RTL)
+    // const reversedTitle = reverseArabicText(sanitizedName);
     const cellData = [
-      sanitizedName,
+      isRTL ? reverseArabicText(sanitizedName) : sanitizedName,
       sanitizedPhone,
       sanitizedAnswer,
       sanitizedDate,
@@ -567,7 +568,7 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
       const font = cellIsArabic ? "Arabic" : "English";
 
       // Reverse Arabic text for proper RTL display
-      const cellText = (isRTL && cellIsArabic) ? reverseArabicText(data) : data;
+      const cellText = isRTL && cellIsArabic ? reverseArabicText(data) : data;
 
       doc
         .fillColor(colors.text)
