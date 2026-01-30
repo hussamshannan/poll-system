@@ -266,31 +266,67 @@ const drawVoteBreakdown = (doc, votes, t, isRTL, startY) => {
     const barWidth = (percentage / 100) * 400;
     const color = option === "Yes" ? colors.yesColor : colors.noColor;
 
-    // Option label
-    doc.fillColor(colors.text)
-       .font(isRTL ? "Arabic" : "English")
-       .fontSize(12)
-       .text(`${option}`, 50, y);
+    if (isRTL) {
+      // RTL Layout
+      const pageWidth = doc.page.width;
 
-    // Bar background
-    doc.save();
-    doc.fillColor(colors.background)
-       .rect(150, y, 400, 20)
-       .fill();
-    doc.restore();
+      // Option label on the right
+      doc.fillColor(colors.text)
+         .font("Arabic")
+         .fontSize(12)
+         .text(`${option}`, pageWidth - 150, y, { align: "right", width: 100 });
 
-    // Bar fill
-    doc.save();
-    doc.fillColor(color)
-       .rect(150, y, barWidth, 20)
-       .fill();
-    doc.restore();
+      // Bar background
+      doc.save();
+      doc.fillColor(colors.background)
+         .rect(50, y, 400, 20)
+         .fill();
+      doc.restore();
 
-    // Percentage text
-    doc.fillColor(colors.text)
-       .font(isRTL ? "Arabic-Bold" : "English-Bold")
-       .fontSize(10)
-       .text(`${count} ${t.votes} (${percentage}%)`, 155, y + 5);
+      // Bar fill (from right to left)
+      const barX = 450 - barWidth; // Position bar from right
+      doc.save();
+      doc.fillColor(color)
+         .rect(barX, y, barWidth, 20)
+         .fill();
+      doc.restore();
+
+      // Percentage text inside bar
+      doc.fillColor(colors.text)
+         .font("Arabic-Bold")
+         .fontSize(10)
+         .text(`${count} ${t.votes} (${percentage}%)`, 50, y + 5, {
+           align: "right",
+           width: 400,
+         });
+    } else {
+      // LTR Layout
+      // Option label on the left
+      doc.fillColor(colors.text)
+         .font("English")
+         .fontSize(12)
+         .text(`${option}`, 50, y);
+
+      // Bar background
+      doc.save();
+      doc.fillColor(colors.background)
+         .rect(150, y, 400, 20)
+         .fill();
+      doc.restore();
+
+      // Bar fill (from left to right)
+      doc.save();
+      doc.fillColor(color)
+         .rect(150, y, barWidth, 20)
+         .fill();
+      doc.restore();
+
+      // Percentage text inside bar
+      doc.fillColor(colors.text)
+         .font("English-Bold")
+         .fontSize(10)
+         .text(`${count} ${t.votes} (${percentage}%)`, 155, y + 5);
+    }
 
     y += 35;
   });
@@ -364,17 +400,20 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
   // Table dimensions
   const tableLeft = 50;
   const tableWidth = doc.page.width - 100;
-  const colWidths = isRTL
-    ? [100, 100, 100, tableWidth - 300] // Date, Answer, Phone, Name (RTL)
-    : [tableWidth - 300, 100, 100, 100]; // Name, Phone, Answer, Date (LTR)
+
+  // Column widths (same for both LTR and RTL)
+  const nameWidth = tableWidth - 300;
+  const phoneWidth = 100;
+  const answerWidth = 100;
+  const dateWidth = 100;
+
+  const colWidths = [nameWidth, phoneWidth, answerWidth, dateWidth];
 
   const rowHeight = 30;
   const headerHeight = 35;
 
-  // Table header
-  const headers = isRTL
-    ? [t.date, t.answer, t.phone, t.name]
-    : [t.name, t.phone, t.answer, t.date];
+  // Table headers (same order for both, but will be positioned differently)
+  const headers = [t.name, t.phone, t.answer, t.date];
 
   // Header background
   doc.save();
@@ -384,8 +423,30 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
   doc.restore();
 
   // Header text
-  let currentX = tableLeft;
   headers.forEach((header, index) => {
+    let currentX;
+
+    if (isRTL) {
+      // For RTL: Calculate position from right to left
+      // Start from the right edge and subtract widths
+      const rightEdge = tableLeft + tableWidth;
+      let offsetFromRight = 0;
+
+      // Calculate offset from right edge for this column
+      for (let i = 0; i <= index; i++) {
+        if (i === index) {
+          currentX = rightEdge - offsetFromRight - colWidths[i];
+        }
+        offsetFromRight += colWidths[i];
+      }
+    } else {
+      // For LTR: Calculate position from left to right
+      currentX = tableLeft;
+      for (let i = 0; i < index; i++) {
+        currentX += colWidths[i];
+      }
+    }
+
     doc.fillColor(colors.white)
        .font(isRTL ? "Arabic-Bold" : "English-Bold")
        .fontSize(11)
@@ -395,7 +456,6 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
          y + 10,
          { width: colWidths[index] - 20, align: isRTL ? "right" : "left" }
        );
-    currentX += colWidths[index];
   });
 
   y += headerHeight;
@@ -430,13 +490,32 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
        .stroke();
     doc.restore();
 
-    // Cell data
-    const cellData = isRTL
-      ? [sanitizedDate, sanitizedAnswer, sanitizedPhone, sanitizedName]
-      : [sanitizedName, sanitizedPhone, sanitizedAnswer, sanitizedDate];
+    // Cell data (same order for both LTR and RTL)
+    const cellData = [sanitizedName, sanitizedPhone, sanitizedAnswer, sanitizedDate];
 
-    currentX = tableLeft;
     cellData.forEach((data, cellIndex) => {
+      let currentX;
+
+      if (isRTL) {
+        // For RTL: Calculate position from right to left
+        const rightEdge = tableLeft + tableWidth;
+        let offsetFromRight = 0;
+
+        // Calculate offset from right edge for this column
+        for (let i = 0; i <= cellIndex; i++) {
+          if (i === cellIndex) {
+            currentX = rightEdge - offsetFromRight - colWidths[i];
+          }
+          offsetFromRight += colWidths[i];
+        }
+      } else {
+        // For LTR: Calculate position from left to right
+        currentX = tableLeft;
+        for (let i = 0; i < cellIndex; i++) {
+          currentX += colWidths[i];
+        }
+      }
+
       // Determine if cell content is Arabic
       const cellIsArabic = isArabic(data);
       const font = cellIsArabic ? "Arabic" : "English";
@@ -454,7 +533,6 @@ const drawTable = (doc, votes, t, isRTL, startY) => {
              ellipsis: true,
            }
          );
-      currentX += colWidths[cellIndex];
     });
 
     y += rowHeight;
