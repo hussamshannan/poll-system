@@ -232,11 +232,11 @@ const generatePollPDF = (votes, pollInfo = {}, options = {}) => {
 
       doc.registerFont(
         "Arabic",
-        path.join(__dirname, "../assets/fonts/Inter/static/Rubik-Regular.ttf"),
+        path.join(__dirname, "../assets/fonts/Rubik/static/Rubik-Regular.ttf"),
       );
       doc.registerFont(
         "Arabic-Bold",
-        path.join(__dirname, "../assets/fonts/Inter/static/Rubik-Bold.ttf"),
+        path.join(__dirname, "../assets/fonts/Rubik/static/Rubik-Bold.ttf"),
       );
       doc.registerFont(
         "English",
