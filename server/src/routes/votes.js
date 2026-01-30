@@ -44,14 +44,87 @@ router.post("/vote", voteLimiter, async (req, res) => {
       });
     }
 
-    // Validate phone format
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    const cleanedPhone = phone.replace(/[\s\-\(\)\.]/g, "");
-    if (!phoneRegex.test(cleanedPhone)) {
+    // Validate name length
+    if (name.trim().length < 2) {
       const message =
         language === "ar"
-          ? "صيغة رقم الهاتف غير صالحة"
-          : "Invalid phone number format";
+          ? "الاسم يجب أن يكون على الأقل حرفين"
+          : "Name must be at least 2 characters long";
+      return res.status(400).json({
+        success: false,
+        message: message,
+      });
+    }
+
+    if (name.trim().length > 100) {
+      const message =
+        language === "ar"
+          ? "الاسم طويل جداً (100 حرف كحد أقصى)"
+          : "Name is too long (maximum 100 characters)";
+      return res.status(400).json({
+        success: false,
+        message: message,
+      });
+    }
+
+    // Validate and clean phone format
+    const cleanedPhone = phone.replace(/[\s\-\(\)\.]/g, "");
+
+    // Must contain only digits and optional leading +
+    if (!/^[\+]?[\d]+$/.test(cleanedPhone)) {
+      const message =
+        language === "ar"
+          ? "يجب أن يحتوي رقم الهاتف على أرقام فقط"
+          : "Phone number must contain only digits";
+      return res.status(400).json({
+        success: false,
+        message: message,
+      });
+    }
+
+    // Check length (minimum 8, maximum 15 digits)
+    const phoneWithoutPlus = cleanedPhone.replace(/^\+/, "");
+
+    if (phoneWithoutPlus.length < 8) {
+      const message =
+        language === "ar"
+          ? "رقم الهاتف قصير جداً (8 أرقام على الأقل)"
+          : "Phone number is too short (minimum 8 digits)";
+      return res.status(400).json({
+        success: false,
+        message: message,
+      });
+    }
+
+    if (phoneWithoutPlus.length > 15) {
+      const message =
+        language === "ar"
+          ? "رقم الهاتف طويل جداً (15 رقم كحد أقصى)"
+          : "Phone number is too long (maximum 15 digits)";
+      return res.status(400).json({
+        success: false,
+        message: message,
+      });
+    }
+
+    // If starts with +, must be followed by a non-zero digit
+    if (/^\+/.test(cleanedPhone) && /^\+0/.test(cleanedPhone)) {
+      const message =
+        language === "ar"
+          ? "رمز الدولة لا يمكن أن يبدأ بالصفر"
+          : "Country code cannot start with 0";
+      return res.status(400).json({
+        success: false,
+        message: message,
+      });
+    }
+
+    // If doesn't start with +, first digit cannot be 0
+    if (!/^\+/.test(cleanedPhone) && /^0/.test(cleanedPhone)) {
+      const message =
+        language === "ar"
+          ? "رقم الهاتف لا يمكن أن يبدأ بالصفر (أضف رمز الدولة +)"
+          : "Phone number cannot start with 0 (add country code +)";
       return res.status(400).json({
         success: false,
         message: message,

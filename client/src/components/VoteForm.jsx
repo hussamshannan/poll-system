@@ -40,7 +40,7 @@ const VoteForm = () => {
       nameHelper:
         "الاسم يجب أن يكون فريداً (بما في ذلك الأسماء المتشابهة بالعربية)",
       phoneLabel: "رقم الهاتف",
-      phoneHelper: "أدخل رقم هاتفك (مثال: +966500000000)",
+      phoneHelper: "أدخل رقم هاتفك مع رمز الدولة (مثال: +966500000000 أو +249123456789)",
       selectLabel: "اختر إجابتك",
       selectPlaceholder: "اختر خيارًا",
       alertMessage:
@@ -74,7 +74,7 @@ const VoteForm = () => {
       nameHelper:
         "The name must be unique (including similar names written in Arabic)",
       phoneLabel: "Phone Number",
-      phoneHelper: "Enter your phone number (example: +966500000000)",
+      phoneHelper: "Enter your phone number with country code (example: +966500000000 or +249123456789)",
       selectLabel: "Select Your Answer",
       selectPlaceholder: "Choose an option",
       alertMessage:
@@ -104,23 +104,97 @@ const VoteForm = () => {
 
   const current = content[language];
 
+  const validatePhoneNumber = (phone) => {
+    // Remove all formatting characters
+    const cleanedPhone = phone.replace(/[\s\-\(\)\.]/g, "");
+
+    // Check if empty
+    if (!cleanedPhone) {
+      return { isValid: false, message: current.errors.phoneRequired };
+    }
+
+    // Must contain only digits and optional leading +
+    if (!/^[\+]?[\d]+$/.test(cleanedPhone)) {
+      return {
+        isValid: false,
+        message:
+          language === "ar"
+            ? "يجب أن يحتوي رقم الهاتف على أرقام فقط"
+            : "Phone number must contain only digits",
+      };
+    }
+
+    // Check length (with or without country code)
+    const phoneWithoutPlus = cleanedPhone.replace(/^\+/, "");
+
+    // Minimum 8 digits, maximum 15 digits (international standard)
+    if (phoneWithoutPlus.length < 8) {
+      return {
+        isValid: false,
+        message:
+          language === "ar"
+            ? "رقم الهاتف قصير جداً (8 أرقام على الأقل)"
+            : "Phone number is too short (minimum 8 digits)",
+      };
+    }
+
+    if (phoneWithoutPlus.length > 15) {
+      return {
+        isValid: false,
+        message:
+          language === "ar"
+            ? "رقم الهاتف طويل جداً (15 رقم كحد أقصى)"
+            : "Phone number is too long (maximum 15 digits)",
+      };
+    }
+
+    // If starts with +, must be followed by a non-zero digit
+    if (/^\+/.test(cleanedPhone) && /^\+0/.test(cleanedPhone)) {
+      return {
+        isValid: false,
+        message:
+          language === "ar"
+            ? "رمز الدولة لا يمكن أن يبدأ بالصفر"
+            : "Country code cannot start with 0",
+      };
+    }
+
+    // If doesn't start with +, first digit cannot be 0
+    if (!/^\+/.test(cleanedPhone) && /^0/.test(cleanedPhone)) {
+      return {
+        isValid: false,
+        message:
+          language === "ar"
+            ? "رقم الهاتف لا يمكن أن يبدأ بالصفر (أضف رمز الدولة +)"
+            : "Phone number cannot start with 0 (add country code +)",
+      };
+    }
+
+    return { isValid: true, message: "" };
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
+    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = current.errors.nameRequired;
     } else if (formData.name.trim().length < 2) {
       newErrors.name = current.errors.nameMinLength;
+    } else if (formData.name.trim().length > 100) {
+      newErrors.name =
+        language === "ar"
+          ? "الاسم طويل جداً (100 حرف كحد أقصى)"
+          : "Name is too long (maximum 100 characters)";
     }
 
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    const cleanedPhone = formData.phone.replace(/[\s\-\(\)\.]/g, "");
-    if (!formData.phone.trim()) {
-      newErrors.phone = current.errors.phoneRequired;
-    } else if (!phoneRegex.test(cleanedPhone)) {
-      newErrors.phone = current.errors.phoneInvalid;
+    // Phone validation
+    const phoneValidation = validatePhoneNumber(formData.phone);
+    if (!phoneValidation.isValid) {
+      newErrors.phone = phoneValidation.message;
     }
 
+    // Answer validation
     if (!formData.answer) {
       newErrors.answer = current.errors.answerRequired;
     } else if (!["Yes", "No"].includes(formData.answer)) {
@@ -133,16 +207,40 @@ const VoteForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+
+    // For phone input, only allow digits, +, -, (, ), space, and .
+    if (name === "phone") {
+      const filteredValue = value.replace(/[^0-9\+\-\(\)\s\.]/g, "");
+      setFormData((prev) => ({
+        ...prev,
+        [name]: filteredValue,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
         [name]: "",
       }));
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    // Validate phone number when user leaves the field
+    if (formData.phone) {
+      const phoneValidation = validatePhoneNumber(formData.phone);
+      if (!phoneValidation.isValid) {
+        setErrors((prev) => ({
+          ...prev,
+          phone: phoneValidation.message,
+        }));
+      }
     }
   };
 
@@ -348,15 +446,19 @@ const VoteForm = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                onBlur={handlePhoneBlur}
                 error={!!errors.phone}
                 helperText={errors.phone || current.phoneHelper}
                 required
                 disabled={isSubmitting}
+                placeholder="+249123456789"
                 inputProps={{
                   style: {
-                    textAlign: isRTL ? "right" : "left",
-                    fontFamily: fontFamily,
+                    textAlign: "left",
+                    fontFamily: "'Courier New', monospace",
+                    letterSpacing: "0.5px",
                   },
+                  maxLength: 20,
                 }}
                 dir="ltr"
                 InputLabelProps={{
