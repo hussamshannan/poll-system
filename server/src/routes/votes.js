@@ -1,9 +1,14 @@
-// In your routes/votes.js file
 const express = require("express");
 const router = express.Router();
 const Vote = require("../models/Vote");
 const { generatePollPDF } = require("../utils/pdfGenerator");
-const { voteLimiter } = require("../middleware/rateLimiter");
+const {
+  voteLimiter,
+  adminLimiter,
+  pdfLimiter,
+  validatePagination,
+  validateSearch,
+} = require("../middleware/security");
 
 /**
  * Helper function to normalize Arabic text for uniqueness check
@@ -187,7 +192,7 @@ router.post("/vote", voteLimiter, async (req, res) => {
 });
 
 // Get all votes with filters
-router.get("/votes", async (req, res) => {
+router.get("/votes", adminLimiter, validatePagination, validateSearch, async (req, res) => {
   try {
     const { answer, search, page = 1, limit = 20 } = req.query;
 
@@ -239,7 +244,7 @@ router.get("/votes", async (req, res) => {
 });
 
 // Get vote statistics
-router.get("/stats", async (req, res) => {
+router.get("/stats", adminLimiter, async (req, res) => {
   try {
     const totalVotes = await Vote.countDocuments();
 
@@ -297,8 +302,7 @@ router.get("/stats", async (req, res) => {
 });
 
 // Export results as PDF
-// routes/votes.js
-router.get('/export/pdf', async (req, res) => {
+router.get('/export/pdf', pdfLimiter, validateSearch, async (req, res) => {
   try {
     const { 
       language = 'en', 

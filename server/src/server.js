@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/database");
 const voteRoutes = require("./routes/votes");
+const { sanitizeInput, apiLimiter } = require("./middleware/security");
 
 // Load environment variables
 dotenv.config();
@@ -13,72 +14,92 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+// Security: Trust proxy for rate limiting behind reverse proxies (Vercel, etc.)
+app.set("trust proxy", 1);
+
 // Helper function to normalize URLs (remove trailing slashes)
 const normalizeOrigin = (origin) => {
   if (!origin) return origin;
   return origin.replace(/\/$/, ""); // Remove trailing slash
 };
 
-// Middleware
+// Get allowed origins from environment
+const getAllowedOrigins = () => {
+  const origins = [
+    normalizeOrigin(process.env.FRONTEND_URL),
+    "http://localhost:3000",
+    "http://localhost:5173",
+  ].filter(Boolean); // Remove null/undefined values
+
+  return origins;
+};
+
+// CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    const allowedOrigins = getAllowedOrigins();
+
+    // Security: Only allow requests with no origin in development
+    if (!origin && process.env.NODE_ENV === "development") {
+      return callback(null, true);
+    }
 
     // Normalize the origin
     const normalizedOrigin = normalizeOrigin(origin);
-    const allowedOrigins = [
-      normalizeOrigin(process.env.FRONTEND_URL) || "http://localhost:3000",
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "https://nh66r0df-5173.inc1.devtunnels.ms",
-    ];
 
     // Check if origin is in allowed list
     if (allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
-      console.log(`CORS blocked for origin: ${origin}`);
+      console.warn(`CORS blocked for origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  maxAge: 86400, // Cache preflight requests for 24 hours
 };
 
+// Apply CORS
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Enable pre-flight for all routes
+app.options("*", cors(corsOptions));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Security: Limit request body size to prevent DoS
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
-// Add CORS headers manually as fallback
+// Security: Add security headers
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = [
-    "https://nh66r0df-5173.inc1.devtunnels.ms",
-    "http://localhost:3000",
-    "http://localhost:5173",
-  ];
+  // Prevent clickjacking
+  res.setHeader("X-Frame-Options", "DENY");
 
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
+  // Prevent MIME type sniffing
+  res.setHeader("X-Content-Type-Options", "nosniff");
 
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  // Enable XSS protection
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+
+  // Prevent referrer leakage
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  // Content Security Policy
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
   );
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  // Remove server header
+  res.removeHeader("X-Powered-By");
 
   next();
 });
+
+// Security: Sanitize all inputs
+app.use(sanitizeInput);
+
+// Security: Apply general rate limiting to all API routes
+app.use("/api", apiLimiter);
 
 // Basic route for health check
 app.get("/health", (req, res) => {
