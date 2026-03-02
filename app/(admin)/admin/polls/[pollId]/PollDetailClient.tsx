@@ -33,14 +33,14 @@ export function PollDetailClient({
   return (
     <div className="space-y-8">
       {/* Header row */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">{pollTitle}</h1>
           <div className="mt-1">
             <StatusBadge status={pollIsExpired ? "expired" : pollStatus} />
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 sm:shrink-0">
           <ExportPDFButton analytics={analytics} pollTitle={pollTitle} />
           <Button variant="outline" asChild>
             <Link href={routes.admin.pollEdit(pollId)}>

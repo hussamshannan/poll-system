@@ -21,7 +21,7 @@ export function AppShell({
       {sidebar ? (
         <div className="flex flex-1">
           <Sidebar variant={sidebar} sectionLabel={sidebarLabel} />
-          <main className="flex-1 p-6 md:p-8 overflow-auto">{children}</main>
+          <main className="flex-1 p-4 md:p-8 overflow-auto pb-20 md:pb-8">{children}</main>
         </div>
       ) : (
         <main className="flex-1">{children}</main>

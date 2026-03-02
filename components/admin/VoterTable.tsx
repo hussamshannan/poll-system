@@ -41,6 +41,7 @@ const columns: Column<VoterRecord>[] = [
   {
     key: "votedAt",
     header: "Voted At",
+    className: "hidden sm:table-cell",
     render: (v) => (
       <span className="text-muted-foreground">{formatDate(v.votedAt)}</span>
     ),
