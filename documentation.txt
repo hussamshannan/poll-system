@@ -1,0 +1,1430 @@
+================================================================================
+  POLLAPP — FULL PROJECT DOCUMENTATION
+  Last updated: 2026-03-01 (session 2)
+================================================================================
+
+TABLE OF CONTENTS
+─────────────────
+  1.  Project Overview
+  2.  Technology Stack
+  3.  Architecture Overview
+  4.  Route Map & Access Levels
+  5.  Screens (Page-by-Page)
+        5.01  Landing Page               /
+        5.02  Public Polls List          /vote
+        5.03  Vote on Poll               /vote/[pollId]
+        5.04  Sign-In                    /sign-in
+        5.05  Admin Dashboard            /admin
+        5.06  Admin – All Polls          /admin/polls
+        5.07  Admin – Create Poll        /admin/polls/new
+        5.08  Admin – Poll Detail        /admin/polls/[pollId]
+        5.09  Admin – Edit Poll          /admin/polls/[pollId]/edit
+        5.10  Admin – Settings           /admin/settings
+  6.  API Endpoint
+        6.01  Clerk Webhook              /api/webhooks/clerk
+  7.  Server Actions
+  8.  Data Models
+  9.  Key Components
+  10. Authentication & Authorization
+  11. Theme System
+  12. RTL (Right-to-Left) Support
+  13. Environment Variables
+  14. Project File Structure
+  15. Changelog
+
+
+================================================================================
+  1. PROJECT OVERVIEW
+================================================================================
+
+PollApp is a full-stack organisational polling platform. Administrators create
+and manage polls through a Clerk-authenticated admin panel. Members of the
+public vote using only their name and phone number — no account required.
+
+Core user flows:
+  • Visitor arrives at the landing page and sees an intro with CTAs.
+  • Visitor navigates to /vote to browse all currently open polls.
+  • Visitor selects a poll and submits their name, phone number, and
+    chosen option(s). No sign-up is needed.
+  • The system enforces one vote per phone number per poll (and also
+    one vote per name per poll), returning a clear error on duplicates.
+  • After voting, the voter sees a confirmation screen.
+  • Admin signs in at /sign-in with Clerk credentials.
+  • Admin is redirected to /admin and can create, view, edit, and delete
+    polls, review individual voter records, see analytics charts,
+    and export results as a PDF.
+  • Admin can customise the global site theme from /admin/settings,
+    choosing one of five preset themes and toggling light/dark mode.
+    Changes apply site-wide instantly.
+
+
+================================================================================
+  2. TECHNOLOGY STACK
+================================================================================
+
+  Runtime / Framework
+  ───────────────────
+  • Next.js 16          App Router, Server Components, Server Actions,
+                        Turbopack (dev)
+  • React 19            UI library
+  • TypeScript 5        Static typing throughout
+
+  Authentication
+  ──────────────
+  • Clerk (@clerk/nextjs 6)   Admin sign-in only — voters do NOT use Clerk
+  • svix                      Webhook signature verification
+
+  Database
+  ────────
+  • MongoDB + Mongoose 9      Document database
+  • Models: Poll, Vote, User, SiteSettings
+
+  UI / Styling
+  ────────────
+  • Tailwind CSS v4           Utility-first styling, logical CSS properties
+                              for RTL (ms-*, me-*, ps-*, pe-*, border-e, etc.)
+  • shadcn/ui                 Component library (21 components)
+  • tweakcn.com               5 full oklch CSS variable theme presets
+  • tw-animate-css            Animation utilities
+  • lucide-react              Icon set
+
+  Forms & Validation
+  ──────────────────
+  • react-hook-form           Client-side form state
+  • @hookform/resolvers        Zod adapter
+  • Zod 4                     Schema validation (CreatePollSchema,
+                              CastVoteSchema, SiteThemeSchema, etc.)
+
+  Charts
+  ──────
+  • Recharts 3                Bar chart, Pie chart, Trend/Line chart
+
+  PDF Export
+  ──────────
+  • @react-pdf/renderer        Programmatic PDF generation using React
+                               components (Document, Page, Text, View,
+                               StyleSheet). No DOM capture required —
+                               completely avoids oklch CSS parsing issues.
+  • pako (overridden to v1)    @react-pdf/pdfkit depends on pako v1 internal
+                               paths (lib/zlib/*). package.json overrides
+                               field pins pako to 1.0.11 to prevent build
+                               failure with pako v2.
+
+  Utilities
+  ─────────
+  • date-fns 4                Date formatting helpers
+  • class-variance-authority  Component variant management
+  • clsx / tailwind-merge     Class name utilities (cn())
+
+
+================================================================================
+  3. ARCHITECTURE OVERVIEW
+================================================================================
+
+  Rendering strategy
+  ──────────────────
+  All pages are React Server Components (RSC) by default. Data is fetched
+  directly in the page via async server actions. Client components ("use client")
+  are used only where interactivity is needed (forms, charts, hooks).
+
+  RSC / Client boundary rule
+  ──────────────────────────
+  React serialisation requires that only plain objects cross the server →
+  client boundary. Lucide icon components (functions) cannot be passed as
+  props from a Server Component to a Client Component. The Sidebar component
+  therefore defines its nav items (including icons) internally, keyed by a
+  plain string `variant` prop. AppShell passes `sidebar="admin"` — a plain
+  string — to the Sidebar.
+
+  Route groups
+  ────────────
+  app/
+  ├── (auth)/          Public auth pages — no layout wrapper.
+  │                    Only /sign-in remains; /sign-up was removed.
+  ├── (admin)/         Admin-only pages — wrapped in AppShell with the
+  │                    "admin" sidebar variant. Layout checks
+  │                    Clerk publicMetadata.role === "admin" and
+  │                    redirects non-admins to /.
+  ├── api/             API route handlers
+  ├── vote/            Public voting pages — SiteHeader only, no sidebar
+  ├── page.tsx         Landing page — SiteHeader only
+  └── layout.tsx       Root layout — ClerkProvider, RTL detection,
+                       data-theme attribute, dark class, font loading.
+                       NOTE: (protected)/ was deleted in the rewrite.
+
+  Data flow
+  ─────────
+  1. Server component calls a server action (actions/*.actions.ts).
+  2. Server action connects to MongoDB, queries/mutates, and returns
+     ActionResult<T> = { success: true, data: T }
+                     | { success: false, error: string, fieldErrors? }.
+  3. Server component passes serialised data as props to client components.
+  4. Client components call server actions via useTransition (no usePollVote /
+     useOptimistic — those were removed in the rewrite).
+
+  Single source of truth for URLs
+  ────────────────────────────────
+  lib/config/routes.ts exports a `routes` const used everywhere to avoid
+  hardcoding URL strings:
+    routes.home                       "/"
+    routes.vote.list                  "/vote"
+    routes.vote.poll(id)              "/vote/[id]"
+    routes.admin.dashboard            "/admin"
+    routes.admin.polls                "/admin/polls"
+    routes.admin.pollNew              "/admin/polls/new"
+    routes.admin.pollDetail(id)       "/admin/polls/[id]"
+    routes.admin.pollEdit(id)         "/admin/polls/[id]/edit"
+    routes.admin.settings             "/admin/settings"
+    routes.auth.signIn                "/sign-in"
+
+  Middleware (proxy.ts)
+  ──────────────────────
+  Clerk middleware protects ONLY:
+    /admin(.*)
+  All other routes (including /vote and /vote/[pollId]) are fully public.
+  Unauthenticated access to /admin/* redirects to /sign-in.
+  NOTE: File is named proxy.ts (Next.js 16 convention; middleware.ts
+  is deprecated). Build output shows "ƒ Proxy (Middleware)".
+
+
+================================================================================
+  4. ROUTE MAP & ACCESS LEVELS
+================================================================================
+
+  URL                              Access Level        Layout
+  ──────────────────────────────── ─────────────────── ─────────────────────────
+  /                                Public              SiteHeader only
+  /vote                            Public              SiteHeader only
+  /vote/[pollId]                   Public              SiteHeader only
+  /sign-in/[[...sign-in]]          Public (unauthed)   Centred, no nav
+  /admin                           Admin role only     AppShell + Admin Sidebar
+  /admin/polls                     Admin role only     AppShell + Admin Sidebar
+  /admin/polls/new                 Admin role only     AppShell + Admin Sidebar
+  /admin/polls/[pollId]            Admin role only     AppShell + Admin Sidebar
+  /admin/polls/[pollId]/edit       Admin role only     AppShell + Admin Sidebar
+  /admin/settings                  Admin role only     AppShell + Admin Sidebar
+  /api/webhooks/clerk              Webhook (svix)      N/A (API route)
+
+  REMOVED routes (deleted in rewrite):
+    /sign-up             — public sign-up removed; Clerk is admin-only
+    /dashboard           — personal user dashboard removed
+    /polls/new           — replaced by /admin/polls/new
+    /polls/[pollId]      — replaced by /vote/[pollId]
+    /polls/[pollId]/results — merged into /admin/polls/[pollId]
+    /polls/[pollId]/edit — replaced by /admin/polls/[pollId]/edit
+    /analytics           — merged into /admin/polls/[pollId]
+    /admin/users         — removed (users table removed)
+    /admin/theme         — replaced by /admin/settings
+
+
+================================================================================
+  5. SCREENS (PAGE-BY-PAGE)
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+  5.01  LANDING PAGE
+  URL:    /
+  File:   app/page.tsx
+  Access: Public
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Introduces the platform to visitors. Provides a brief description of
+  PollApp and directs users to the public polls list.
+
+LAYOUT
+  SiteHeader → Hero section → Feature cards → Footer
+
+SECTIONS
+
+  SiteHeader
+    • Logo ("PollApp") linking to /
+    • "Polls" nav link → /vote
+    • Signed-in (admin): "Admin" link + Clerk UserButton avatar
+    • Signed-out: "Admin Sign In" ghost button → /sign-in
+
+  Hero
+    • Badge: "Open Voting Platform"
+    • Headline: "Make Every Voice Count"
+    • Sub-text: one-line description of the platform
+    • Primary CTA button: "Browse Polls" → /vote
+      (arrow icon carries data-dir-flip; flips to ← in RTL mode)
+    • Secondary CTA button: "Admin Sign In" → /sign-in
+      (shown only when the user is NOT signed in)
+
+  Feature Cards  (3 shadcn Card components)
+    1. Live Polls        — browse and vote in seconds
+    2. Real-time Results — results update instantly with charts
+    3. Fair & Transparent— one vote per phone number, anonymous option
+
+  Footer
+    • Copyright line with current year (computed server-side)
+
+COMPONENTS USED
+  SiteHeader, Button, Badge, Card, CardContent, Separator
+
+SERVER DATA
+  No database queries on this page.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.02  PUBLIC POLLS LIST
+  URL:    /vote
+  File:   app/vote/page.tsx
+  Access: Public
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Lists every poll that is currently open (status = "open" and not
+  expired). Any visitor can browse polls. Clicking a poll navigates
+  to its individual voting page.
+
+LAYOUT
+  SiteHeader → Page heading → PollGrid
+
+STATES
+
+  Polls available
+    • Responsive grid of PollCard components.
+    • Each card shows: title, description, vote count, status badge,
+      creation date. Card links to /vote/[pollId].
+
+  No open polls
+    • EmptyState with "No active polls right now" message.
+
+SERVER DATA FETCHED
+  listOpenPolls()   — all polls with status "open", sorted newest first
+
+COMPONENTS USED
+  SiteHeader, PollGrid, PollCard, StatusBadge
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.03  VOTE ON POLL
+  URL:    /vote/[pollId]
+  Files:  app/vote/[pollId]/page.tsx (server)
+          app/vote/[pollId]/VotePageClient.tsx (client)
+  Access: Public
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Dedicated voting page for a single poll. Voters enter their name and
+  phone number, select option(s), and submit. No account is required.
+
+LAYOUT
+  SiteHeader → Centred card (max-width xl) → VotePageClient
+
+STATES (managed in VotePageClient)
+
+  Poll open — not yet voted
+    • VoterInfoForm: "Your Name" text input + "Phone Number" tel input
+      (dir="ltr" for phone regardless of page direction).
+    • OptionSelector: list of option cards. Single-select by default;
+      multi-select if poll.allowMultipleVotes is true.
+    • VoteSubmit button: "Submit Vote". Shows spinner while pending.
+    • Error message shown inline if submission fails.
+
+  Poll open — after successful vote
+    • VoteConfirmation card: thank-you message, voter name, selected
+      option(s), poll title.
+
+  Poll closed or expired
+    • Alert with appropriate message — form is not shown.
+
+SERVER DATA FETCHED
+  getPollById(pollId)   — full poll document; notFound() if missing
+
+CLIENT DATA / HOOKS
+  useVote({ castVoteAction })   — dependency-injected hook that wraps
+    the castVote server action in useTransition. Returns:
+    { submit, isPending, error, fieldErrors, isSubmitted }
+
+VOTING UNIQUENESS RULES
+  One vote per phone number per poll (unique compound index).
+  One vote per name per poll (unique compound index).
+  Attempting to vote twice returns a specific error message:
+    "This phone number has already voted on this poll"
+    "This name has already voted on this poll"
+
+COMPONENTS USED
+  SiteHeader, VoterInfoForm, OptionSelector, VoteSubmit, VoteConfirmation,
+  Alert, AlertDescription
+
+SERVER ACTIONS (called from client)
+  castVote(input)   — validates, checks duplicates, inserts Vote document,
+                      increments poll.totalVotes, revalidates cache.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.04  SIGN-IN
+  URL:    /sign-in/[[...sign-in]]
+  File:   app/(auth)/sign-in/[[...sign-in]]/page.tsx
+  Access: Public
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Admin-only sign-in page powered by Clerk. Regular visitors do not need
+  an account and have no sign-up path.
+
+LAYOUT
+  Full-screen centred container with the Clerk <SignIn /> component.
+
+CUSTOMISATION
+  • The "Don't have an account? Sign up" footer link is hidden via
+    Clerk's appearance API (footerAction: { display: "none" }).
+  • After successful sign-in, Clerk redirects to /admin
+    (NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/admin).
+
+COMPONENTS USED
+  Clerk <SignIn /> with appearance override
+
+SERVER DATA
+  None — entirely managed by Clerk.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.05  ADMIN DASHBOARD
+  URL:    /admin
+  File:   app/(admin)/admin/page.tsx
+  Access: Admin role only
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Platform-wide overview for the administrator. Displays aggregate stats
+  across all polls and all votes.
+
+LAYOUT
+  AppShell (Admin Sidebar) → PageHeader → SiteStatsPanel
+
+SECTIONS
+
+  SiteStatsPanel
+    Platform-wide counts:
+    • Total polls created
+    • Total votes cast
+    • Currently open polls
+    • Total registered admin users
+
+SERVER DATA FETCHED
+  getSiteStats()   — platform-wide aggregation across all polls/votes
+
+COMPONENTS USED
+  PageHeader, SiteStatsPanel
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.06  ADMIN – ALL POLLS
+  URL:    /admin/polls
+  File:   app/(admin)/admin/polls/page.tsx
+  Access: Admin role only
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Tabular view of every poll on the platform. Admins can view details,
+  edit, or delete any poll.
+
+LAYOUT
+  AppShell → PageHeader (with "Create Poll" button) → PollTable
+
+TABLE COLUMNS
+  • Poll title
+  • Status badge (Draft / Open / Closed / Expired)
+  • Total votes
+  • Created date
+  • Actions: view (eye icon) → /admin/polls/[pollId]
+             edit (pencil icon) → /admin/polls/[pollId]/edit
+             delete (trash icon) — triggers ConfirmDialog → adminDeletePoll
+
+PAGINATION
+  Fetches up to 50 polls per request (page 1, limit 50).
+
+SERVER DATA FETCHED
+  listAllPolls(page, limit)   — paginated list of all polls
+
+SERVER ACTIONS (via table)
+  adminDeletePoll(pollId)   — deletes poll + its votes, admin-only
+
+COMPONENTS USED
+  PageHeader, PollTable, DataTable, StatusBadge, Button
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.07  ADMIN – CREATE POLL
+  URL:    /admin/polls/new
+  Files:  app/(admin)/admin/polls/new/page.tsx (server)
+          app/(admin)/admin/polls/new/CreatePollClient.tsx (client)
+  Access: Admin role only
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Form to create a new poll. On success redirects to the new poll's
+  admin detail page.
+
+LAYOUT
+  AppShell → PageHeader → PollForm card
+
+FORM FIELDS  (validated with Zod — CreatePollSchema)
+  • Title          (required, text)
+  • Description    (optional, textarea)
+  • Options        (minimum 2, dynamic list managed by OptionEditor)
+  • Allow multiple votes  (Switch toggle)
+  • Anonymous voting      (Switch toggle)
+  • Expiration date/time  (optional datetime-local input)
+
+BEHAVIOUR
+  • react-hook-form with zodResolver handles client-side validation.
+  • On submit, calls createPoll() server action.
+  • Success → router.push(routes.admin.pollDetail(newPoll._id))
+  • Error   → shows Alert with error message below the form.
+
+SERVER ACTIONS
+  createPoll(data)   — creates poll in MongoDB, increments user's
+                       pollsCreated counter, revalidates /admin/polls.
+
+COMPONENTS USED
+  PageHeader, PollForm, OptionEditor, Card, Input, Textarea, Switch,
+  Label, Button, Alert
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.08  ADMIN – POLL DETAIL
+  URL:    /admin/polls/[pollId]
+  Files:  app/(admin)/admin/polls/[pollId]/page.tsx (server)
+          app/(admin)/admin/polls/[pollId]/PollDetailClient.tsx (client)
+  Access: Admin role only
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Full detail view for a single poll. Combines analytics charts,
+  a voter records table, PDF export, and edit navigation.
+
+LAYOUT
+  AppShell → PageHeader (title + status badge + edit button)
+           → AnalyticsPanel (charts)
+           → VoterTable (voter records)
+           → ExportPDFButton
+
+SECTIONS
+
+  PageHeader
+    • Poll title
+    • StatusBadge (Open / Closed / Draft / Expired)
+    • "Edit Poll" button → /admin/polls/[pollId]/edit
+
+  AnalyticsPanel
+    • VoteResult: progress-bar option breakdown with counts + %
+    • VoteBarChart: Recharts horizontal bar chart
+    • VotePieChart: Recharts pie/donut chart
+    • TrendChart: Recharts line chart (votes over last 30 days)
+    • No DOM ref needed for PDF — export is programmatic.
+
+  VoterTable
+    Columns: Voter Name | Phone (dir="ltr") | Option(s) Voted | Date
+    Paginated — shows up to 20 rows; more via server action.
+
+  ExportPDFButton
+    • Dynamically imports @react-pdf/renderer and AnalyticsPDFDocument.
+    • Calls pdf(<AnalyticsPDFDocument analytics={...} />).toBlob().
+    • Creates a temporary <a> element to trigger browser download.
+    • Shows user-visible error if generation fails.
+    • No DOM capture — works regardless of CSS variable format.
+
+SERVER DATA FETCHED (in parallel)
+  getPollById(pollId)             — full poll document
+  getPollAnalytics(pollId)        — option breakdown + trend series
+  getVotersForPoll(pollId, 1, 20) — first page of voter records
+
+COMPONENTS USED
+  PageHeader, AnalyticsPanel, VoteResult, VoteBarChart, VotePieChart,
+  TrendChart, VoterTable, ExportPDFButton, StatusBadge, DataTable
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.09  ADMIN – EDIT POLL
+  URL:    /admin/polls/[pollId]/edit
+  Files:  app/(admin)/admin/polls/[pollId]/edit/page.tsx (server)
+          app/(admin)/admin/polls/[pollId]/edit/EditPollClient.tsx (client)
+  Access: Admin role only
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Allows the admin to modify any poll's title, description, options,
+  toggles, status, and expiry date.
+
+LAYOUT
+  AppShell → PageHeader → PollForm (pre-filled with existing data)
+
+GUARD
+  • If poll doesn't exist → notFound().
+
+FORM FIELDS
+  Same as Create Poll (§ 5.07), pre-populated from the existing document.
+  Additional field: Status (Draft / Open / Closed select).
+
+BEHAVIOUR
+  • On submit, calls updatePoll({ pollId, ...data }).
+  • Success → router.push(routes.admin.pollDetail(poll._id))
+
+SERVER DATA FETCHED
+  getPollById(pollId)   — existing poll data to pre-fill the form
+
+SERVER ACTIONS
+  updatePoll(data)   — updates poll fields in MongoDB, revalidates
+                       /admin/polls and /vote/[pollId] caches.
+
+COMPONENTS USED
+  PageHeader, PollForm, OptionEditor
+
+
+────────────────────────────────────────────────────────────────────────────────
+  5.10  ADMIN – SETTINGS
+  URL:    /admin/settings
+  File:   app/(admin)/admin/settings/page.tsx
+  Access: Admin role only
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Lets the admin choose a global site theme and toggle between light and
+  dark mode. Changes are persisted to MongoDB and applied site-wide
+  via the root layout on every request.
+
+LAYOUT
+  AppShell → PageHeader → ThemeEditor
+
+THEME SELECTION
+  Five preset themes from tweakcn.com:
+    1. Vercel        — clean monochrome black/white palette
+    2. Violet Bloom  — bold violet/purple, large border radius (1.4rem)
+    3. Modern Minimal— subtle blue-grey palette, tight radius (0.375rem)
+    4. Nature        — earthy greens and warm cream background
+    5. Pastel Dreams — soft lavender/purple, pill radius (1.5rem)
+
+  Each theme has full light and dark mode variable sets covering:
+    --background, --foreground, --card, --card-foreground, --popover,
+    --primary, --primary-foreground, --secondary, --secondary-foreground,
+    --muted, --muted-foreground, --accent, --accent-foreground,
+    --destructive, --border, --input, --ring, --radius,
+    --chart-1..5, --sidebar, --sidebar-foreground, --sidebar-primary,
+    --sidebar-primary-foreground, --sidebar-accent,
+    --sidebar-accent-foreground, --sidebar-border, --sidebar-ring.
+
+LIVE PREVIEW
+  Selecting a theme card or toggling the mode immediately applies changes
+  to the DOM (document.documentElement.dataset.theme + classList.toggle
+  "dark") so the admin sees the full site re-theme in real time before
+  saving.
+
+BEHAVIOUR
+  • Theme cards grid: clicking selects a theme; active card shows a
+    checkmark badge.
+  • Color swatches (3 circles: bg / primary / accent) shown on each
+    card for the current mode.
+  • Mini UI mockup on each card (filled bar + faded bar).
+  • Appearance section: "Light" and "Dark" toggle buttons.
+  • "Save Changes" button persists { themeName, mode } to MongoDB.
+  • "Discard" button reverts unsaved local changes.
+  • Success / error Alert shown after save.
+
+SERVER DATA FETCHED
+  getSiteTheme()   — current { themeName, mode } from SiteSettings.
+  Falls back to { themeName: "vercel", mode: "light" } if unset or
+  if the stored document uses the old color-picker format.
+
+SERVER ACTIONS
+  updateSiteTheme({ themeName, mode })   — upserts SiteSettings in MongoDB,
+                                           calls revalidatePath("/", "layout")
+
+COMPONENTS USED
+  PageHeader, ThemeEditor, Card, CardHeader, CardTitle, CardContent,
+  Button, Alert, AlertDescription
+
+
+================================================================================
+  6. API ENDPOINT
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+  6.01  CLERK WEBHOOK
+  URL:    /api/webhooks/clerk
+  File:   app/api/webhooks/clerk/route.ts
+  Method: POST
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Receives lifecycle events from Clerk and keeps the MongoDB User
+  collection in sync with Clerk's user store (for admin accounts).
+
+VERIFICATION
+  Uses the svix library to verify the webhook signature using
+  CLERK_WEBHOOK_SECRET. Returns HTTP 400 if headers are missing or
+  the signature is invalid.
+
+HANDLED EVENTS
+  user.created   → syncUser() upserts a User document in MongoDB
+  user.updated   → syncUser() updates the existing MongoDB document
+  user.deleted   → deleteUserByClerkId() removes the User document
+
+RESPONSE
+  HTTP 200 "OK" on success.
+  HTTP 400 with an error message on verification failure.
+
+REQUIRED ENV VAR
+  CLERK_WEBHOOK_SECRET   — obtained from the Clerk dashboard.
+
+
+================================================================================
+  7. SERVER ACTIONS
+================================================================================
+
+  File                           Action                   Description
+  ────────────────────────────── ──────────────────────── ─────────────────────
+  actions/poll.actions.ts        createPoll               Create a new poll
+                                 updatePoll               Update poll fields
+                                 deletePoll               Delete own poll+votes
+                                 getPollById              Fetch one poll
+                                 listPollsByUser          Polls by user (Clerk ID)
+                                 listOpenPolls            All open polls (public)
+                                 updatePollStatus         Change status only
+
+  actions/vote.actions.ts        castVote                 Submit a vote (no auth)
+                                                          Validates name+phone,
+                                                          catches 11000 duplicates,
+                                                          ValidationError,
+                                                          CastError explicitly.
+                                 getVoteByPhone           Check if phone has voted
+
+  actions/analytics.actions.ts   getPollAnalytics         Per-poll analytics
+                                 getDashboardStats        User-level stats (admin)
+
+  actions/user.actions.ts        syncUser                 Upsert User from Clerk
+                                 getUserByClerkId         Fetch User document
+                                 deleteUserByClerkId      Delete User document
+
+  actions/admin.actions.ts       adminDeletePoll          Delete any poll (admin)
+                                 getSiteStats             Platform-wide stats
+                                 listAllPolls             All polls (paginated)
+                                 listAllUsers             All users (paginated)
+                                 getVotersForPoll         Voter records (paginated)
+
+  actions/theme.actions.ts       getSiteTheme             Read SiteSettings theme
+                                 updateSiteTheme          Save theme to DB
+                                                          (requireAdmin guard)
+
+  All actions return: ActionResult<T>
+    { success: true;  data: T }
+  | { success: false; error: string; fieldErrors?: Record<string,string[]> }
+
+  lib/utils/admin.utils.ts  →  requireAdmin()
+    Helper used by admin-only actions. Calls Clerk auth(), checks
+    publicMetadata.role === "admin". Returns an err() result if not admin.
+
+
+================================================================================
+  8. DATA MODELS  (MongoDB / Mongoose)
+================================================================================
+
+  Poll
+  ────
+  Field              Type               Notes
+  ────────────────── ────────────────── ─────────────────────────────────────
+  title              String             Required
+  description        String
+  options            [{text, order}]    Subdocument array, min 2
+  status             Enum               "draft" | "open" | "closed"
+  allowMultipleVotes Boolean            Default: false
+  isAnonymous        Boolean            Default: false
+  expiresAt          Date               Nullable
+  createdBy          String             Clerk user ID
+  totalVotes         Number             Denormalised counter
+  Virtual: isExpired                   true if expiresAt < now
+
+  Serialised to Poll type (lib/types/poll.types.ts) via serializePoll():
+  all ObjectIds converted to strings, Dates to ISO strings.
+
+  Vote  (rewritten — no longer uses Clerk IDs)
+  ────
+  Field              Type               Notes
+  ────────────────── ────────────────── ─────────────────────────────────────
+  pollId             ObjectId           Ref: Poll, required
+  optionIds          [ObjectId]         Selected option IDs, required
+  voterName          String             Required, trimmed
+  voterPhone         String             Required, trimmed
+  votedAt            Date               Default: now
+
+  Indexes:
+    { pollId, voterPhone } unique   — one vote per phone per poll
+    { pollId, voterName  } unique   — one vote per name per poll
+    { pollId, votedAt    }          — for trend queries
+
+  NOTE: The old voterClerkId field and index were removed. If the
+  MongoDB database still has the old index from before the rewrite,
+  it will fire a 11000 error which is caught and surfaced as
+  "You have already voted on this poll". Drop the old index from the
+  MongoDB Atlas UI if needed.
+
+  Development hot-reload note:
+  Vote.model.ts deletes mongoose.models.Vote in non-production
+  environments before registering, so that schema changes are always
+  picked up on hot reload without a stale model cache.
+
+  User  (admin accounts only)
+  ────
+  Field              Type               Notes
+  ────────────────── ────────────────── ─────────────────────────────────────
+  clerkId            String             Unique
+  email              String
+  username           String
+  firstName          String
+  lastName           String
+  imageUrl           String
+  pollsCreated       Number             Denormalised counter
+  createdAt          Date
+
+  NOTE: totalVotesCast was removed in the rewrite (voters no longer
+  have accounts).
+
+  SiteSettings  (singleton — _id = "singleton")
+  ────────────
+  Field              Type               Notes
+  ────────────────── ────────────────── ─────────────────────────────────────
+  theme.themeName    String             "vercel" | "violet-bloom" |
+                                       "modern-minimal" | "nature" |
+                                       "pastel-dreams"
+  theme.mode         Enum               "light" | "dark"
+  updatedBy          String             Clerk user ID of last admin to save
+  updatedAt          Date               Auto-managed by Mongoose timestamps
+
+  Backward compatibility: if the stored document has the old color-picker
+  format (primaryColor etc.), getSiteTheme() returns DEFAULT_THEME instead
+  of failing.
+
+
+================================================================================
+  9. KEY COMPONENTS
+================================================================================
+
+  Layout components  (components/layout/)
+  ─────────────────────────────────────────
+  SiteHeader    Sticky top header for public pages. Logo + "Polls" nav link.
+                Signed-in: "Admin" link + Clerk UserButton.
+                Signed-out: "Admin Sign In" ghost button.
+                Uses ms-auto for RTL-compatible right-alignment.
+
+  Sidebar       Client component. Accepts a `variant: string` prop.
+                Defines nav items with Lucide icons internally in a
+                SIDEBAR_CONFIGS registry (avoids RSC serialisation issue).
+                "admin" variant: Overview, All Polls, Settings.
+                Uses active-link detection (usePathname).
+
+  AppShell      Server component wrapper. Accepts `sidebar?: string | null`
+                (plain string passed to Sidebar) and optional
+                `headerNavItems`. Renders a two-column layout with sticky
+                sidebar on desktop, collapsed on mobile.
+
+  Common components  (components/common/)
+  ──────────────────────────────────────────
+  StatusBadge   Colour-coded badge for poll status. Config object maps
+                status strings to variant + label.
+  DataTable<T>  Generic typed table. Accepts columns: Column<T>[],
+                data: T[], keyExtractor, and optional actions slot.
+                Uses text-start / text-end for RTL.
+
+  Voting components  (components/voting/)
+  ────────────────────────────────────────
+  VoterInfoForm   Name + phone number inputs. Phone has dir="ltr" always.
+  OptionSelector  Clickable option cards with Check indicator on selection.
+  VoteSubmit      Composite: VoterInfoForm + OptionSelector + submit button.
+                  Manages local name/phone/selectedIds state.
+  VoteConfirmation Thank-you card shown after successful vote.
+
+  Poll components  (components/polls/)
+  ──────────────────────────────────────
+  PollCard      Summary card for a poll. Accepts href prop (uses
+                routes.vote.poll() as default) and optional actions slot.
+  PollGrid      Responsive grid of PollCards with hrefBuilder and
+                emptyState props.
+  PollForm      Create/edit form with react-hook-form + Zod.
+                Callback-based: onSubmit, onSuccess props.
+  OptionEditor  Dynamic option list (add / remove rows). Renamed from
+                PollOptions.
+
+  Analytics components  (components/analytics/)
+  ───────────────────────────────────────────────
+  AnalyticsPanel  Wrapper for all charts. Props: analytics, showBarChart?,
+                  showPieChart?, showTrend?. No pdfExportRef — PDF export
+                  is programmatic (no DOM capture needed).
+  VoteResult      Progress-bar option breakdown with counts + percentages.
+  VoteBarChart    Recharts BarChart — votes per option. All colours
+                  resolved to rgb() via useChartColors hook.
+  VotePieChart    Recharts PieChart — vote share percentage. Colours
+                  resolved to rgb() via useChartColors hook.
+  TrendChart      Recharts LineChart — votes over last 30 days. Colours
+                  resolved to rgb() via useChartColors hook.
+
+  Admin components  (components/admin/)
+  ───────────────────────────────────────
+  PollTable       Uses DataTable. Action buttons: eye/edit/delete.
+                  Delete calls adminDeletePoll via callback.
+  VoterTable      Shows voter records: name, phone (dir="ltr"), voted
+                  options, timestamp. Uses DataTable.
+  ThemeEditor     Visual theme picker. Theme cards grid (name, swatches,
+                  mini UI preview), light/dark toggle, save/discard buttons.
+                  Applies live DOM preview via dataset.theme + classList.
+  SiteStatsPanel  Platform-wide stat grid.
+
+  Shared components  (components/shared/)
+  ────────────────────────────────────────
+  PageHeader      Title + description + right-side children slot.
+  EmptyState      Centred icon + heading + description.
+  ConfirmDialog   shadcn Dialog wrapper for destructive confirmations.
+
+  PDF  (components/pdf/)
+  ───────────────────────
+  ExportPDFButton       On click: dynamically imports @react-pdf/renderer
+                        and AnalyticsPDFDocument, calls pdf().toBlob(),
+                        triggers browser download via a temporary <a> tag.
+                        Shows user-visible error text on failure.
+                        Uses ms-2 (RTL-safe icon margin).
+  AnalyticsPDFDocument  @react-pdf/renderer Document component.
+                        Sections: Header (title + export date), Summary
+                        cards (total votes, option count, leading option),
+                        Vote Breakdown (option rows with progress bars),
+                        Votes Over Time (table), Footer (page numbers).
+                        Uses hardcoded hex colours — no CSS variables.
+
+  Hooks  (hooks/)
+  ─────────────────
+  useVote({ castVoteAction })
+    Dependency-injected hook. Wraps castVoteAction in useTransition.
+    Returns { submit, isPending, error, fieldErrors, isSubmitted }.
+    The DI pattern keeps the hook testable and decoupled from the
+    specific server action implementation.
+
+  useCopyToClipboard
+    Copies a string to the clipboard. Returns { copy, copied }.
+
+  useChartColors
+    Resolves CSS custom properties (oklch) to rgb() strings that
+    Recharts' internal colour parser can handle.
+    Uses a hidden <span> element + getComputedStyle().color to force
+    the browser to convert oklch → rgb.
+    Watches for theme/dark-mode changes via MutationObserver on
+    document.documentElement (attributes: data-theme, class).
+    Returns: { primary, chart[5], border, mutedForeground, card,
+               cardForeground, radius }.
+
+  UI primitives  (components/ui/)
+  ────────────────────────────────
+  21 shadcn/ui components: alert, avatar, badge, button, card, dialog,
+  dropdown-menu, form, input, label, popover, progress, scroll-area,
+  select, separator, sheet, skeleton, switch, tabs, textarea, tooltip.
+
+
+================================================================================
+  10. AUTHENTICATION & AUTHORIZATION
+================================================================================
+
+  Authentication (who you are)
+  ──────────────────────────────
+  VOTERS do NOT authenticate. They identify themselves with a name and
+  phone number when casting a vote.
+
+  ADMINS authenticate via Clerk. The app never stores passwords.
+
+  Session check in server components (admin actions):
+    const { userId } = await auth();   // null if unauthenticated
+
+  Session check in middleware:
+    await auth.protect();   // redirects to /sign-in if unauthenticated
+
+  Sign-in flow:
+    1. Admin visits /sign-in (or is redirected there from /admin).
+    2. Clerk <SignIn /> component handles authentication.
+    3. On success, redirected to /admin (NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL).
+    4. Sign-up link hidden — no public registration.
+
+  User sync:
+    When an admin account is created or updated in Clerk, the webhook
+    (§ 6.01) fires and calls syncUser() to keep MongoDB in sync.
+
+  Authorization (what you can do)
+  ─────────────────────────────────
+  Role            How set                       What's unlocked
+  ─────────────── ───────────────────────────── ─────────────────────────────
+  Public visitor  No account needed             /vote, /vote/[pollId], /
+  Admin           Clerk publicMetadata           /admin/* routes, all CRUD
+                  { "role": "admin" }            on polls, analytics,
+                                                 theme settings
+
+  To grant admin role:
+    1. Open Clerk dashboard → Users → select user.
+    2. Edit "Public Metadata" → set { "role": "admin" }.
+    3. Verify the admin layout guard redirects non-admins correctly.
+
+
+================================================================================
+  11. THEME SYSTEM
+================================================================================
+
+  Storage
+  ───────
+  SiteSettings document (singleton) stores:
+    { theme: { themeName: string, mode: "light" | "dark" } }
+
+  CSS definition (globals.css)
+  ─────────────────────────────
+  Each theme is defined as a CSS attribute selector block:
+
+    [data-theme="vercel"] { ... }       ← light mode variables
+    [data-theme="vercel"].dark { ... }  ← dark mode overrides
+
+  Themes covered: vercel, violet-bloom, modern-minimal, nature,
+  pastel-dreams. All 30+ shadcn/ui CSS custom properties are defined
+  (background, foreground, card, primary, secondary, muted, accent,
+  destructive, border, input, ring, radius, chart-1..5, and all
+  sidebar-* variables). Values are in the oklch colour space.
+
+  Application (app/layout.tsx)
+  ─────────────────────────────
+  getSiteTheme() runs on every request. The result is applied to <html>:
+    <html data-theme={themeName} className={isDark ? "dark" : ""}>
+
+  Tailwind picks up the correct variable values because the @theme inline
+  block maps --color-primary → var(--primary) etc., and the active
+  [data-theme] block provides the values for those CSS properties.
+
+  Live preview in ThemeEditor
+  ────────────────────────────
+  When the admin selects a theme card or toggles mode, the client
+  immediately applies:
+    document.documentElement.dataset.theme = selectedTheme
+    document.documentElement.classList.toggle("dark", mode === "dark")
+  This re-themes the entire admin UI in real time without a page reload.
+  Saving to MongoDB + revalidatePath propagates the selection to all
+  public pages.
+
+  Dark mode
+  ──────────
+  Activated by the "dark" class on <html>.
+  @custom-variant dark (&:is(.dark *)) in globals.css handles all
+  Tailwind dark: variants.
+
+  Available themes
+  ─────────────────
+  Name             ID               Radius    Character
+  ──────────────── ──────────────── ───────── ──────────────────────────────
+  Vercel           vercel           0.5rem    Monochrome black/white
+  Violet Bloom     violet-bloom     1.4rem    Bold violet/purple
+  Modern Minimal   modern-minimal   0.375rem  Subtle blue-grey
+  Nature           nature           0.5rem    Earthy greens + warm cream
+  Pastel Dreams    pastel-dreams    1.5rem    Soft lavender/pink
+
+
+================================================================================
+  12. RTL (RIGHT-TO-LEFT) SUPPORT
+================================================================================
+
+  Detection
+  ──────────
+  app/layout.tsx reads the Accept-Language HTTP header on every server
+  render and calls detectDir():
+    • Checks the first-preference language code against the RTL list:
+        ar (Arabic), he (Hebrew), fa (Farsi/Persian), ur (Urdu),
+        ps (Pashto), ku (Kurdish), sd (Sindhi), yi (Yiddish)
+    • Returns "rtl" if matched, "ltr" otherwise.
+  The result sets:
+    <html dir="rtl|ltr" lang="ar|en">
+
+  CSS utilities
+  ─────────────
+  • Tailwind logical properties used throughout:
+      ms-auto  (margin-inline-start)   instead of ml-auto
+      me-*     (margin-inline-end)     instead of mr-*
+      ps-*     (padding-inline-start)  instead of pl-*
+      pe-*     (padding-inline-end)    instead of pr-*
+      border-e (border-inline-end)     instead of border-r
+      text-start / text-end           instead of text-left / text-right
+  • Directional icons carry data-dir-flip attribute.
+    The CSS rule [dir="rtl"] [data-dir-flip] { transform: scaleX(-1) }
+    automatically mirrors them in RTL mode.
+
+  Special cases
+  ─────────────
+  • Phone number inputs always have dir="ltr" regardless of page
+    direction, so phone digits are entered left-to-right.
+  • VoterInfoForm: the phone <input> explicitly sets dir="ltr".
+  • ExportPDFButton: icon uses ms-2 (RTL-safe logical margin).
+  • DataTable: uses text-start / text-end for column headers and cells.
+
+
+================================================================================
+  13. ENVIRONMENT VARIABLES
+================================================================================
+
+  Variable                          Required  Description
+  ────────────────────────────────── ───────── ─────────────────────────────────
+  MONGODB_URI                        Yes       MongoDB connection string
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY  Yes       Clerk publishable key
+  CLERK_SECRET_KEY                   Yes       Clerk secret key
+  CLERK_WEBHOOK_SECRET               Yes       svix webhook signing secret
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL      Yes       Must be "/sign-in"
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL      Yes       Set to "/sign-in" (no public
+                                               sign-up; prevents 404 if Clerk
+                                               internally references this var)
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL Yes      Must be "/admin"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL Yes      Set to "/admin"
+
+  All variables are placed in .env.local (never committed to VCS).
+
+  Admin setup
+  ───────────
+  After signing in, open the Clerk dashboard and set:
+    publicMetadata: { "role": "admin" }
+  on your user to unlock /admin/* routes.
+
+  Common misconfiguration issues fixed:
+  • NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL was "/dashboard" — caused 404
+    after sign-in since that route was deleted. Now "/admin".
+  • NEXT_PUBLIC_CLERK_SIGN_UP_URL was "/sign-up" — caused 404 since
+    the sign-up page was deleted. Now "/sign-in".
+
+
+================================================================================
+  14. PROJECT FILE STRUCTURE
+================================================================================
+
+  poll/
+  ├── actions/
+  │   ├── admin.actions.ts        getSiteStats, listAllPolls, listAllUsers,
+  │   │                           adminDeletePoll, getVotersForPoll
+  │   ├── analytics.actions.ts    getPollAnalytics, getDashboardStats
+  │   ├── poll.actions.ts         createPoll, updatePoll, deletePoll,
+  │   │                           getPollById, listPollsByUser, listOpenPolls,
+  │   │                           updatePollStatus
+  │   ├── theme.actions.ts        getSiteTheme, updateSiteTheme
+  │   ├── user.actions.ts         syncUser, getUserByClerkId, deleteUserByClerkId
+  │   └── vote.actions.ts         castVote, getVoteByPhone
+  ├── app/
+  │   ├── (admin)/
+  │   │   ├── layout.tsx                     Admin layout (AppShell, sidebar="admin")
+  │   │   └── admin/
+  │   │       ├── page.tsx                   Admin Dashboard
+  │   │       ├── polls/
+  │   │       │   ├── page.tsx               Admin All Polls
+  │   │       │   ├── new/
+  │   │       │   │   ├── page.tsx
+  │   │       │   │   └── CreatePollClient.tsx
+  │   │       │   └── [pollId]/
+  │   │       │       ├── page.tsx
+  │   │       │       ├── PollDetailClient.tsx
+  │   │       │       └── edit/
+  │   │       │           ├── page.tsx
+  │   │       │           └── EditPollClient.tsx
+  │   │       └── settings/
+  │   │           └── page.tsx               Admin Settings (theme editor)
+  │   ├── (auth)/
+  │   │   └── sign-in/[[...sign-in]]/
+  │   │       └── page.tsx                   Clerk SignIn (footerAction hidden)
+  │   ├── api/
+  │   │   └── webhooks/clerk/
+  │   │       └── route.ts                   Clerk webhook handler
+  │   ├── vote/
+  │   │   ├── page.tsx                       Public Polls List
+  │   │   └── [pollId]/
+  │   │       ├── page.tsx                   Server shell
+  │   │       └── VotePageClient.tsx         Voting form / confirmation
+  │   ├── globals.css                        Tailwind + 5 tweakcn themes
+  │   ├── layout.tsx                         Root layout (data-theme, dark class)
+  │   └── page.tsx                           Landing Page
+  ├── components/
+  │   ├── admin/
+  │   │   ├── PollTable.tsx
+  │   │   ├── SiteStatsPanel.tsx
+  │   │   ├── ThemeEditor.tsx                Theme cards + dark mode toggle
+  │   │   └── VoterTable.tsx
+  │   ├── analytics/
+  │   │   ├── AnalyticsPanel.tsx
+  │   │   ├── VoteBarChart.tsx
+  │   │   ├── VotePieChart.tsx
+  │   │   ├── TrendChart.tsx
+  │   │   └── VoteResult.tsx
+  │   ├── common/
+  │   │   ├── DataTable.tsx                  Generic typed table
+  │   │   └── StatusBadge.tsx                Poll status badge
+  │   ├── layout/
+  │   │   ├── AppShell.tsx                   sidebar?: string | null
+  │   │   ├── Sidebar.tsx                    variant: string, icons defined internally
+  │   │   └── SiteHeader.tsx                 Public header (replaces Navbar)
+  │   ├── pdf/
+  │   │   ├── AnalyticsPDFDocument.tsx   react-pdf Document (no CSS vars)
+  │   │   └── ExportPDFButton.tsx
+  │   ├── polls/
+  │   │   ├── OptionEditor.tsx               Dynamic option list (was PollOptions)
+  │   │   ├── PollCard.tsx                   href prop + actions slot
+  │   │   ├── PollForm.tsx                   Callback-based form
+  │   │   └── PollGrid.tsx
+  │   ├── shared/
+  │   │   ├── ConfirmDialog.tsx
+  │   │   ├── EmptyState.tsx
+  │   │   └── PageHeader.tsx
+  │   ├── voting/
+  │   │   ├── OptionSelector.tsx
+  │   │   ├── VoteConfirmation.tsx
+  │   │   ├── VoterInfoForm.tsx
+  │   │   └── VoteSubmit.tsx
+  │   └── ui/                                21 shadcn/ui primitives
+  ├── hooks/
+  │   ├── useCopyToClipboard.ts
+  │   ├── useChartColors.ts                  oklch → rgb resolver for Recharts
+  │   └── useVote.ts                         DI castVoteAction hook
+  ├── lib/
+  │   ├── config/
+  │   │   └── routes.ts                      Single source of truth for URLs
+  │   ├── db/
+  │   │   └── mongoose.ts                    Connection singleton, global cache
+  │   ├── models/
+  │   │   ├── Poll.model.ts
+  │   │   ├── SiteSettings.model.ts          { themeName, mode }
+  │   │   ├── User.model.ts
+  │   │   └── Vote.model.ts                  voterName+voterPhone (no Clerk ID)
+  │   ├── types/
+  │   │   ├── action-result.types.ts
+  │   │   ├── admin.types.ts                 AdminUser, VoterRecord
+  │   │   ├── analytics.types.ts
+  │   │   ├── poll.types.ts
+  │   │   └── theme.types.ts                 ThemeName, ThemeMode, THEMES[]
+  │   ├── utils/
+  │   │   ├── admin.utils.ts                 requireAdmin()
+  │   │   ├── format.ts
+  │   │   └── poll.utils.ts                  serializePoll, isPollExpired
+  │   └── validations/
+  │       ├── poll.schema.ts
+  │       ├── theme.schema.ts                z.enum of 5 theme names + mode
+  │       └── vote.schema.ts                 CastVoteSchema (name+phone)
+  ├── proxy.ts                               Only /admin(.*) protected
+  │                                          (renamed from middleware.ts,
+  │                                          Next.js 16 convention)
+  ├── documentation.txt                      This file
+  ├── progress.md                            Implementation checklist
+  └── package.json
+
+
+================================================================================
+  15. CHANGELOG
+================================================================================
+
+  2026-03-01  PDF export replaced with @react-pdf/renderer
+  ──────────────────────────────────────────────────────────
+  • Replaced html2canvas + jsPDF with @react-pdf/renderer for all PDF
+    generation. The previous approach captured the analytics DOM node
+    with html2canvas, which internally tried to parse CSS custom
+    properties containing oklch() values — a colour function html2canvas
+    does not support — causing a runtime exception on every export.
+  • Created components/pdf/AnalyticsPDFDocument.tsx: a react-pdf
+    Document component that renders poll analytics data directly into
+    PDF primitives (Document, Page, Text, View, StyleSheet). All colours
+    are hardcoded hex values so no CSS variable resolution is needed.
+    Sections: Header, Summary cards, Vote Breakdown (progress bars),
+    Votes Over Time (table), Footer with page numbers.
+  • Rewrote components/pdf/ExportPDFButton.tsx: on click, dynamically
+    imports @react-pdf/renderer and AnalyticsPDFDocument (code split,
+    not in initial bundle), calls pdf(<AnalyticsPDFDocument />).toBlob(),
+    then triggers a browser download via a temporary <a> element.
+    Accepts analytics prop instead of the old DOM targetRef.
+  • Removed pdfExportRef from AnalyticsPanel and PollDetailClient:
+    no DOM ref is needed with the programmatic approach.
+  • Build fix: @react-pdf/pdfkit internally imports pako v1 internal
+    paths (pako/lib/zlib/constants.js etc.) which no longer exist in
+    pako v2. Added "overrides": { "pako": "1.0.11" } to package.json
+    so npm resolves pako to v1 for all transitive dependencies.
+  • npx next build and npx tsc --noEmit both pass with zero errors.
+
+  2026-03-01  Recharts oklch colour fix (useChartColors hook)
+  ─────────────────────────────────────────────────────────────
+  • Recharts internally parses colour strings for hover effects,
+    gradients, and animations. It cannot parse the oklch() colour
+    function used by all five theme presets, producing the console
+    error "Attempting to parse an unsupported color function 'oklch'".
+  • Created hooks/useChartColors.ts: resolves CSS custom properties
+    to rgb() strings by creating a hidden <span>, setting its CSS
+    color to var(--X), appending it to <body>, reading
+    getComputedStyle(el).color (which the browser converts to rgb()),
+    then removing the element. Non-colour values (--radius) are read
+    directly via getPropertyValue.
+  • A MutationObserver on document.documentElement (watching the
+    data-theme attribute and class attribute) re-resolves all colours
+    whenever the theme or dark mode changes, keeping charts in sync
+    with ThemeEditor live previews.
+  • VoteBarChart, VotePieChart, TrendChart all updated to consume the
+    hook and pass resolved rgb() strings to all Recharts colour props
+    (stroke, fill, contentStyle, tick.fill, dot.fill).
+
+  2026-03-01  Dev-mode CSS resolution fix
+  ──────────────────────────────────────
+  • next dev was failing with CssSyntaxError "Can't resolve 'tailwindcss'
+    in '.../app'" from @tailwindcss/postcss. Root cause: stale .next/dev
+    lock left by a previous process combined with a stale Turbopack cache.
+  • Fix: killed the orphaned next dev process, ran npx next build (fresh
+    compile to clear the cache), then npm install (ensure clean
+    node_modules), after which next dev started cleanly.
+  • No code or config changes were required; the setup is correct per the
+    official Next.js 16 docs (postcss.config.mjs with @tailwindcss/postcss,
+    @import "tailwindcss" in globals.css).
+
+  2026-03-01  middleware.ts → proxy.ts rename
+  ────────────────────────────────────────────
+  • Next.js 16 deprecated the middleware.ts file convention in favour of
+    proxy.ts to clarify the network boundary.
+  • middleware.ts renamed to proxy.ts; exported handler and logic are
+    unchanged. Build output now shows "ƒ Proxy (Middleware)" confirming
+    the rename was picked up by the framework.
+  • The deprecated middleware.ts still works (Edge runtime only) but will
+    be removed in a future version.
+
+  2026-02-28  Chart theming fix
+  ─────────────────────────────────
+  • VoteBarChart, VotePieChart, TrendChart: replaced invalid
+    hsl(var(--chart-N)) / hsl(var(--primary)) colour references with
+    var(--chart-N) / var(--primary) directly. The CSS variables already
+    contain full oklch() values; wrapping them in hsl() produced invalid
+    colour strings and broke chart colours on all non-default themes.
+  • CartesianGrid: stroke now uses var(--border).
+  • XAxis / YAxis: stroke uses var(--border); tick labels use
+    var(--muted-foreground).
+  • Tooltip contentStyle now themed: background var(--card), border
+    1px solid var(--border), text var(--card-foreground), corner radius
+    var(--radius).
+  • PieChart Legend labels wrapped in <span> with var(--foreground) fill.
+  • Bar dot (TrendChart) fill set to var(--primary) explicitly.
+
+  2026-02-28  Mongoose bufferCommands fix
+  ─────────────────────────────────────────
+  • Vote.model.ts: removed top-level Vote.collection.dropIndex() call
+    that was executing at module evaluation time before any database
+    connection was established. Because mongoose is configured with
+    bufferCommands: false this threw a MongooseError on every page load.
+  • lib/db/mongoose.ts: migration moved into connectToDatabase() where
+    it runs via mongoose.connection.db.collection('votes').dropIndex()
+    after await mongoose.connect() resolves. The .catch() still silently
+    ignores the "index not found" error for databases that never had the
+    old index.
+
+  2026-02-28  Theme system redesign
+  ───────────────────────────────────
+  • SiteTheme type changed from { primaryColor, backgroundColor,
+    foregroundColor, accentColor, borderRadius, fontFamily } to
+    { themeName: ThemeName, mode: "light" | "dark" }.
+  • Five tweakcn.com presets added to globals.css as [data-theme="X"]
+    and [data-theme="X"].dark CSS blocks with full oklch variable sets:
+    vercel, violet-bloom, modern-minimal, nature, pastel-dreams.
+  • app/layout.tsx: inline style overrides replaced with data-theme
+    attribute + dark class on <html>.
+  • ThemeEditor fully redesigned: color pickers replaced with theme
+    cards grid + light/dark mode toggle + live DOM preview.
+  • ThemePreview.tsx deleted.
+  • SiteSettings model, Zod schema, and server action updated.
+  • Backward compatibility: old color-picker documents fall back to
+    DEFAULT_THEME (vercel light) without crashing.
+
+  2026-02-28  Sign-in routing fixes
+  ────────────────────────────────────
+  • NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL changed from /dashboard to /admin.
+  • NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL changed from /dashboard to /admin.
+  • NEXT_PUBLIC_CLERK_SIGN_UP_URL changed from /sign-up to /sign-in
+    (sign-up page was deleted in the rewrite).
+  • Sign-in page: Clerk <SignIn /> footerAction hidden via appearance API
+    to suppress the "Sign up" link.
+
+  2026-02-28  Vote and PDF bug fixes
+  ─────────────────────────────────────
+  • Vote.model.ts: clears mongoose.models.Vote in non-production to
+    prevent stale schema cache causing ValidationError on hot reload.
+  • vote.actions.ts castVote: added explicit handlers for
+    Mongoose ValidationError and CastError (were falling through to
+    the generic "Failed to cast vote" message).
+  • ExportPDFButton: added allowTaint: true, backgroundColor: "#ffffff",
+    logging: false, imageTimeout: 0, and onclone white-background fix
+    to improve html2canvas compatibility with Recharts SVG and oklch
+    CSS variables. Added user-visible error state below the button.
+    Fixed icon margin from mr-2 to ms-2 (RTL-safe).
+
+  2026-02-28  RSC serialisation fix
+  ────────────────────────────────────
+  • Sidebar.tsx refactored: Lucide icon components moved inside the
+    client component in a SIDEBAR_CONFIGS registry keyed by string.
+    Previously icons were passed as props from AppShell (Server
+    Component) → Sidebar (Client Component), violating React's
+    serialisation constraint.
+  • AppShell.tsx: sidebar prop type changed from NavItem[] | null to
+    string | null. Admin layout passes sidebar="admin".
+
+  2026-02-20  Full rewrite (Phase 1–6)
+  ──────────────────────────────────────
+  ARCHITECTURAL CHANGES
+  • Voting model: voters now use name + phone number only. No Clerk
+    account required to vote. Clerk is admin-only.
+  • Middleware: only /admin(.*) protected (was also protecting
+    /dashboard, /polls/new, /polls/(.*)/edit, /analytics).
+  • lib/config/routes.ts created as single source of truth for URLs.
+
+  DATA LAYER
+  • Vote model: removed voterClerkId; added voterName, voterPhone.
+    New compound unique indexes on (pollId, voterPhone) and
+    (pollId, voterName).
+  • User model: removed totalVotesCast field.
+  • admin.types.ts: removed totalVotesCast from AdminUser; added
+    VoterRecord type { _id, voterName, voterPhone, optionTexts, votedAt }.
+  • vote.actions.ts: no auth(), name+phone inputs, distinct 11000 error
+    messages by keyPattern.
+  • admin.actions.ts: added getVotersForPoll(pollId, page, limit).
+
+  LAYOUT COMPONENTS
+  • SiteHeader: replaces Navbar. Shows "Admin Sign In" (not "Get Started"
+    / sign-up). Admin link and UserButton for signed-in users.
+  • Sidebar: unified (replaces Sidebar + AdminSidebar). String-variant
+    approach with SIDEBAR_CONFIGS registry.
+  • AppShell: configurable sidebar + optional headerNavItems.
+  • StatusBadge and DataTable added to components/common/.
+
+  PUBLIC VOTING PAGES
+  • /vote: server component listing open polls (PollGrid).
+  • /vote/[pollId]: three-state client (voting form / confirmation /
+    closed alert). useVote hook with DI castVoteAction.
+  • Voting components: VoterInfoForm, OptionSelector, VoteSubmit,
+    VoteConfirmation.
+
+  ADMIN PAGES
+  • /admin/polls/new, /admin/polls/[pollId], /admin/polls/[pollId]/edit
+    created (replaced /polls/* protected routes).
+  • /admin/settings created (replaced /admin/theme).
+  • PollTable and VoterTable added to components/admin/.
+  • PollForm: callback-based (onSubmit, onSuccess props).
+  • OptionEditor: renamed from PollOptions.
+
+  ANALYTICS
+  • AnalyticsPanel: replaces AnalyticsDashboard. Props include
+    pdfExportRef for PDF capture.
+  • VoteResult: moved from components/polls/ to components/analytics/.
+
+  DELETED FILES / ROUTES
+  • app/(protected)/             entire directory deleted
+  • app/(auth)/sign-up/          deleted (no public sign-up)
+  • app/(admin)/admin/theme/     replaced by /admin/settings
+  • app/(admin)/admin/users/     removed
+  • components/layout/Navbar.tsx         deleted → SiteHeader
+  • components/layout/AdminSidebar.tsx   deleted → unified Sidebar
+  • components/polls/PollDeleteButton.tsx deleted
+  • components/polls/PollList.tsx         deleted → PollGrid
+  • components/polls/PollOptions.tsx      deleted → OptionEditor
+  • components/polls/VoteForm.tsx         deleted → VoteSubmit
+  • components/polls/VoteResult.tsx       moved to analytics/
+  • components/polls/PollStatusBadge.tsx  deleted → StatusBadge
+  • components/analytics/AnalyticsDashboard.tsx  deleted → AnalyticsPanel
+  • components/admin/AdminPollTable.tsx   deleted → PollTable
+  • components/admin/AdminUserTable.tsx   deleted
+  • hooks/usePollVote.ts                  deleted → useVote
+
+
+================================================================================
+  END OF DOCUMENTATION
+================================================================================

@@ -1,0 +1,21 @@
+import { format, formatDistanceToNow } from "date-fns";
+
+export function formatDate(date: string | Date): string {
+  return format(new Date(date), "MMM d, yyyy");
+}
+
+export function formatDateTime(date: string | Date): string {
+  return format(new Date(date), "MMM d, yyyy 'at' h:mm a");
+}
+
+export function formatRelative(date: string | Date): string {
+  return formatDistanceToNow(new Date(date), { addSuffix: true });
+}
+
+export function formatPercent(value: number): string {
+  return `${Math.round(value * 100) / 100}%`;
+}
+
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat().format(value);
+}
