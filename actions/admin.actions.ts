@@ -296,25 +296,44 @@ export async function inviteAdmin(
 
   const trimmedEmail = email.trim().toLowerCase();
 
+  // Build absolute redirectUrl so Clerk knows where to send the invited user.
+  // VERCEL_URL is automatically set by Vercel (no https prefix); fall back to
+  // NEXT_PUBLIC_APP_URL or localhost for local development.
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
+  const redirectUrl = `${baseUrl}/sign-up`;
+
   try {
     const client = await clerkClient();
     await client.invitations.createInvitation({
       emailAddress: trimmedEmail,
       publicMetadata: { role: "admin" },
       ignoreExisting: true,
+      redirectUrl,
     });
     return ok({ invited: true });
-  } catch (error) {
-    const clerkErr = error as {
-      errors?: { message: string; longMessage?: string; code?: string }[];
-      status?: number;
-    };
-    const firstErr = clerkErr?.errors?.[0];
-    console.error("inviteAdmin error:", JSON.stringify(clerkErr, null, 2));
-    const message =
-      firstErr?.longMessage ??
-      firstErr?.message ??
-      (error instanceof Error ? error.message : "Failed to send invitation");
+  } catch (error: unknown) {
+    let message = "Failed to send invitation";
+
+    if (error && typeof error === "object" && "errors" in error) {
+      const { errors, status } = error as {
+        errors: { message?: string; longMessage?: string; code?: string; meta?: Record<string, unknown> }[];
+        status?: number;
+      };
+      // Log each sub-error individually (Clerk error class breaks JSON.stringify)
+      console.error("inviteAdmin status:", status, "redirectUrl:", redirectUrl);
+      for (const e of errors ?? []) {
+        console.error("inviteAdmin clerk sub-error:", e.code, e.message, e.longMessage, e.meta);
+      }
+      const first = errors?.[0];
+      const parts = [first?.longMessage, first?.code, first?.meta?.paramName as string].filter(Boolean);
+      message = parts.join(" — ") || first?.message || message;
+    } else if (error instanceof Error) {
+      console.error("inviteAdmin error:", error.message);
+      message = error.message;
+    }
+
     return err(message);
   }
 }
