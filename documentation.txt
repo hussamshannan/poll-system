@@ -1,6 +1,6 @@
 ================================================================================
   POLLAPP — FULL PROJECT DOCUMENTATION
-  Last updated: 2026-03-01 (session 2)
+  Last updated: 2026-03-08 (session 3)
 ================================================================================
 
 TABLE OF CONTENTS
@@ -20,6 +20,7 @@ TABLE OF CONTENTS
         5.08  Admin – Poll Detail        /admin/polls/[pollId]
         5.09  Admin – Edit Poll          /admin/polls/[pollId]/edit
         5.10  Admin – Settings           /admin/settings
+        5.11  Admin – Manage Admins      /admin/admins
   6.  API Endpoint
         6.01  Clerk Webhook              /api/webhooks/clerk
   7.  Server Actions
@@ -203,10 +204,17 @@ Core user flows:
   /admin/polls/[pollId]            Admin role only     AppShell + Admin Sidebar
   /admin/polls/[pollId]/edit       Admin role only     AppShell + Admin Sidebar
   /admin/settings                  Admin role only     AppShell + Admin Sidebar
+  /admin/admins                    Admin role only     AppShell + Admin Sidebar
+  /sign-up                         Public (invite only) Centred, no nav
   /api/webhooks/clerk              Webhook (svix)      N/A (API route)
 
   REMOVED routes (deleted in rewrite):
     /sign-up             — public sign-up removed; Clerk is admin-only
+                           NOTE: /sign-up was re-added in session 3 as a
+                           landing page for Clerk email invitations. It
+                           presents the Clerk <SignUp /> component but is
+                           only reachable via an invitation link — no link
+                           from the app's own navigation.
     /dashboard           — personal user dashboard removed
     /polls/new           — replaced by /admin/polls/new
     /polls/[pollId]      — replaced by /vote/[pollId]
@@ -577,6 +585,62 @@ COMPONENTS USED
 
 
 ────────────────────────────────────────────────────────────────────────────────
+  5.11  ADMIN – MANAGE ADMINS
+  URL:    /admin/admins
+  Files:  app/(admin)/admin/admins/page.tsx (server)
+          app/(admin)/admin/admins/AdminsClient.tsx (client)
+  Access: Admin role only
+────────────────────────────────────────────────────────────────────────────────
+
+PURPOSE
+  Lists all users registered in Clerk and allows the master admin to
+  promote users to admin, demote admins back to regular users, delete
+  accounts, and invite new admins by email.
+
+LAYOUT
+  AppShell → PageHeader → Invite form → AdminsClient (user table)
+
+SECTIONS
+
+  Invite Form
+    • Email input + "Send Invitation" button.
+    • Calls inviteAdmin(email) — creates a Clerk invitation with
+      publicMetadata: { role: "admin" } so the invited user gains admin
+      access on sign-up.
+    • redirectUrl is built from the actual request headers (x-forwarded-host)
+      so the link always points to the correct production domain regardless
+      of which Vercel deployment received the request.
+    • Success: shows "Invitation sent to {email}" toast.
+    • Error: displays error detail from Clerk API.
+
+  User Table
+    Columns: Avatar | Name + Email | Role badge | Actions
+    • Role badge: "Master Admin" / "Admin" / "User"
+    • Actions (per row):
+        Promote  — setAdminRole(clerkId, true)   (regular → admin)
+        Demote   — setAdminRole(clerkId, false)  (admin → regular)
+        Delete   — deleteAdminUser(clerkId)      (with confirm dialog)
+    • Master admin row has no action buttons (protected from demotion/deletion).
+    • Current user's row shows no "Demote" or "Delete" (self-protection).
+
+GUARDS
+  • Cannot demote or delete yourself.
+  • Cannot demote or delete the master admin (MASTER_ADMIN_EMAIL constant).
+  • requireAdmin() check on every server action.
+
+SERVER DATA FETCHED
+  listUsersWithRoles()   — fetches all Clerk users with role from publicMetadata
+
+SERVER ACTIONS
+  setAdminRole(clerkId, makeAdmin)   — updates publicMetadata.role in Clerk
+  deleteAdminUser(clerkId)           — deletes user from Clerk
+  inviteAdmin(email)                 — sends Clerk invitation with admin role
+
+COMPONENTS USED
+  PageHeader, DataTable, Badge, Avatar, Button, ConfirmDialog, Alert
+
+
+────────────────────────────────────────────────────────────────────────────────
   5.10  ADMIN – SETTINGS
   URL:    /admin/settings
   File:   app/(admin)/admin/settings/page.tsx
@@ -705,6 +769,10 @@ REQUIRED ENV VAR
                                  listAllPolls             All polls (paginated)
                                  listAllUsers             All users (paginated)
                                  getVotersForPoll         Voter records (paginated)
+                                 listUsersWithRoles       Clerk users + role metadata
+                                 setAdminRole             Promote/demote admin role
+                                 deleteAdminUser          Delete user from Clerk
+                                 inviteAdmin              Send Clerk email invitation
 
   actions/theme.actions.ts       getSiteTheme             Read SiteSettings theme
                                  updateSiteTheme          Save theme to DB
@@ -885,11 +953,23 @@ REQUIRED ENV VAR
                         triggers browser download via a temporary <a> tag.
                         Shows user-visible error text on failure.
                         Uses ms-2 (RTL-safe icon margin).
+                        Builds PDFTranslations from next-intl t() before
+                        render (hooks unavailable inside react-pdf render).
+                        Passes locale (useLocale) and voters prop.
   AnalyticsPDFDocument  @react-pdf/renderer Document component.
-                        Sections: Header (title + export date), Summary
-                        cards (total votes, option count, leading option),
-                        Vote Breakdown (option rows with progress bars),
-                        Votes Over Time (table), Footer (page numbers).
+                        Font: IBM Plex Sans Arabic (Regular + Bold TTF from
+                        /public/fonts/). Font.registerHyphenationCallback
+                        returns [word] to disable hyphenation (prevents
+                        Arabic letter-shaping corruption).
+                        makeStyles(isRTL) factory: flexDirection row-reverse,
+                        textAlign right, summary cards use width "31%" (not
+                        flex: 1) to prevent Arabic text clipping.
+                        Page 1: Header, Summary cards (total votes / option
+                        count / leading option), Vote Breakdown (option rows
+                        with progress bars), Footer with page numbers.
+                        Page 2+: Voter Records table (Name, Phone, Voted For,
+                        Voted At). wrap={false} per row prevents row splits.
+                        PDFTranslations interface with formatPage function.
                         Uses hardcoded hex colours — no CSS variables.
 
   Hooks  (hooks/)
@@ -1096,7 +1176,9 @@ REQUIRED ENV VAR
   poll/
   ├── actions/
   │   ├── admin.actions.ts        getSiteStats, listAllPolls, listAllUsers,
-  │   │                           adminDeletePoll, getVotersForPoll
+  │   │                           adminDeletePoll, getVotersForPoll,
+  │   │                           listUsersWithRoles, setAdminRole,
+  │   │                           deleteAdminUser, inviteAdmin
   │   ├── analytics.actions.ts    getPollAnalytics, getDashboardStats
   │   ├── poll.actions.ts         createPoll, updatePoll, deletePoll,
   │   │                           getPollById, listPollsByUser, listOpenPolls,
@@ -1120,11 +1202,16 @@ REQUIRED ENV VAR
   │   │       │       └── edit/
   │   │       │           ├── page.tsx
   │   │       │           └── EditPollClient.tsx
+  │   │       ├── admins/
+  │   │       │   ├── page.tsx               Admin – Manage Admins
+  │   │       │   └── AdminsClient.tsx       Invite + role management table
   │   │       └── settings/
   │   │           └── page.tsx               Admin Settings (theme editor)
   │   ├── (auth)/
-  │   │   └── sign-in/[[...sign-in]]/
-  │   │       └── page.tsx                   Clerk SignIn (footerAction hidden)
+  │   │   ├── sign-in/[[...sign-in]]/
+  │   │   │   └── page.tsx                   Clerk SignIn (footerAction hidden)
+  │   │   └── sign-up/[[...sign-up]]/
+  │   │       └── page.tsx                   Clerk SignUp (invitation landing only)
   │   ├── api/
   │   │   └── webhooks/clerk/
   │   │       └── route.ts                   Clerk webhook handler
@@ -1212,6 +1299,75 @@ REQUIRED ENV VAR
 ================================================================================
   15. CHANGELOG
 ================================================================================
+
+  2026-03-08  Admin management page (/admin/admins)
+  ────────────────────────────────────────────────
+  • Added /admin/admins route with full user management:
+    - List all Clerk users with their assigned role (admin / user).
+    - Promote any user to admin (setAdminRole(clerkId, true)).
+    - Demote any admin to regular user (setAdminRole(clerkId, false)).
+    - Delete any user account (deleteAdminUser(clerkId)).
+    - Invite a new admin by email (inviteAdmin(email)) — creates a Clerk
+      invitation with publicMetadata: { role: "admin" }.
+  • Master admin (MASTER_ADMIN_EMAIL constant) is protected: cannot be
+    demoted or deleted. Current user is also protected from self-demotion
+    and self-deletion.
+  • Added four server actions to admin.actions.ts:
+      listUsersWithRoles()         — fetches Clerk user list + role flag
+      setAdminRole(id, makeAdmin)  — updates publicMetadata.role in Clerk
+      deleteAdminUser(id)          — deletes Clerk user
+      inviteAdmin(email)           — creates Clerk invitation with admin role
+  • Sidebar "Admins" nav item added to the admin sidebar variant.
+
+  2026-03-08  Invitation redirectUrl fix (headers-based)
+  ───────────────────────────────────────────────────────
+  • Clerk email invitations require a redirectUrl for the link in the
+    invitation email. Previous approach used VERCEL_PROJECT_PRODUCTION_URL
+    env var, which was returning deployment-specific preview URLs
+    (e.g. poll-kcokbkz1w-…vercel.app) — these are Vercel SSO-protected
+    and redirect invited users to vercel.com/login instead of the app.
+  • Fix: inviteAdmin() now reads headers() from next/headers to extract
+    x-forwarded-host (actual domain the admin is browsing) and
+    x-forwarded-proto. This always resolves to the correct production URL
+    regardless of which Vercel deployment served the request.
+  • Added /sign-up/[[...sign-up]] page as the invitation landing target.
+    The Clerk <SignUp /> component completes onboarding for invited users.
+
+  2026-03-08  PDF Arabic support (IBM Plex Sans Arabic)
+  ──────────────────────────────────────────────────────
+  • AnalyticsPDFDocument redesigned for full Arabic/RTL support:
+    - Font changed to IBM Plex Sans Arabic (same font the web app uses),
+      loaded from /public/fonts/IBMPlexSansArabic-Regular.ttf and -Bold.ttf.
+      Noto Sans Arabic was tried first but its complex variable-font GSUB
+      tables caused fontkit (react-pdf's font engine) to produce broken
+      lam-alef ligatures ("اا" instead of "ال").
+    - Font.registerHyphenationCallback((word) => [word]) disables automatic
+      hyphenation, which corrupts Arabic letter shaping in react-pdf.
+    - makeStyles(isRTL) factory builds direction-aware StyleSheet outside
+      the component (performance — StyleSheet.create is expensive).
+    - Summary cards use width: "31%" instead of flex: 1 to prevent
+      react-pdf's flex measurement from clipping Arabic glyph widths.
+    - Removed textTransform: "uppercase" (breaks Arabic letter forms).
+    - dateLocale set to "ar-u-nu-latn" for Arabic with Latin numerals.
+  • Added Voter Records table as Page 2 (columns: Name, Phone, Voted For,
+    Voted At). wrap={false} on each row prevents mid-row page breaks.
+  • Removed "Votes Over Time" section from PDF (not required).
+  • ExportPDFButton: added useLocale(), builds PDFTranslations object from
+    next-intl t() calls before PDF render (hooks not available inside
+    react-pdf render functions). Passes voters prop for page 2.
+  • PDFTranslations interface: added formatPage: (current, total) => string
+    function field (called inside react-pdf render prop — avoids using
+    next-intl hooks inside react-pdf components).
+  • Messages: added voterRecords, name, phone, votedFor, votedAt, noVoters
+    keys to pdf namespace in both en.json and ar.json.
+
+  2026-03-08  Arabic terminology update
+  ──────────────────────────────────────
+  • ar.json: replaced "استطلاع/استطلاعات" (survey) with "استبان/استبانات"
+    (questionnaire/poll) throughout all namespaces (nav, sidebar, landing,
+    vote, votePage, admin, stats, pollTable, pollForm).
+  • Updated subtitle from "جمعية المتقاعدين من بنك السودان المركزي" to
+    "رابطة معاشيي بنك السودان المركزي".
 
   2026-03-01  PDF export replaced with @react-pdf/renderer
   ──────────────────────────────────────────────────────────
