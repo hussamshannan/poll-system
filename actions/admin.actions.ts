@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import Poll from "@/lib/models/Poll.model";
 import Vote from "@/lib/models/Vote.model";
@@ -10,6 +11,7 @@ import {
   SiteStats,
   AdminPoll,
   AdminUser,
+  AdminUserWithRole,
   VoterRecord,
 } from "@/lib/types/admin.types";
 import { requireAdmin } from "@/lib/utils/admin.utils";
@@ -194,5 +196,78 @@ export async function getVotersForPoll(
   } catch (error) {
     console.error("getVotersForPoll error:", error);
     return err("Failed to get voters");
+  }
+}
+
+export async function listUsersWithRoles(): Promise<
+  ActionResult<AdminUserWithRole[]>
+> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  try {
+    const client = await clerkClient();
+    const { data: clerkUsers } = await client.users.getUserList({ limit: 100 });
+
+    const users: AdminUserWithRole[] = clerkUsers.map((u) => ({
+      clerkId: u.id,
+      email: u.emailAddresses[0]?.emailAddress ?? "",
+      firstName: u.firstName ?? "",
+      lastName: u.lastName ?? "",
+      imageUrl: u.imageUrl,
+      isAdmin: u.publicMetadata?.role === "admin",
+    }));
+
+    return ok(users);
+  } catch (error) {
+    console.error("listUsersWithRoles error:", error);
+    return err("Failed to list users");
+  }
+}
+
+export async function setAdminRole(
+  clerkId: string,
+  makeAdmin: boolean
+): Promise<ActionResult<{ updated: true }>> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  // Prevent removing your own admin role
+  const { userId } = await auth();
+  if (userId === clerkId && !makeAdmin) {
+    return err("You cannot remove your own admin role");
+  }
+
+  try {
+    const client = await clerkClient();
+    await client.users.updateUser(clerkId, {
+      publicMetadata: { role: makeAdmin ? "admin" : null },
+    });
+    revalidatePath("/admin/admins");
+    return ok({ updated: true });
+  } catch (error) {
+    console.error("setAdminRole error:", error);
+    return err("Failed to update role");
+  }
+}
+
+export async function inviteAdmin(
+  email: string
+): Promise<ActionResult<{ invited: true }>> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  try {
+    const client = await clerkClient();
+    await client.invitations.createInvitation({
+      emailAddress: email,
+      publicMetadata: { role: "admin" },
+    });
+    return ok({ invited: true });
+  } catch (error) {
+    console.error("inviteAdmin error:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to send invitation";
+    return err(message);
   }
 }

@@ -8,7 +8,8 @@
   "sidebar": {
     "overview": "Overview",
     "allPolls": "All Polls",
-    "settings": "Settings"
+    "settings": "Settings",
+    "admins": "Admins"
   },
   "landing": {
     "badge": "Organisational Polling",
@@ -68,7 +69,9 @@
     "editPollDesc": "Update the poll details",
     "editBtn": "Edit",
     "settingsTitle": "Settings",
-    "settingsDesc": "Choose a theme and appearance for the entire site"
+    "settingsDesc": "Choose a theme and appearance for the entire site",
+    "adminsTitle": "Admin Management",
+    "adminsDesc": "Manage who has admin access to this platform"
   },
   "stats": {
     "totalUsers": "Total Users",
@@ -138,6 +141,24 @@
     "export": "Export PDF",
     "exporting": "Exporting...",
     "error": "Could not generate PDF. Please try again."
+  },
+  "admins": {
+    "tableTitle": "Users",
+    "colUser": "User",
+    "colRole": "Role",
+    "colAction": "Action",
+    "roleAdmin": "Admin",
+    "roleUser": "User",
+    "promote": "Make Admin",
+    "demote": "Remove Admin",
+    "selfDemoteError": "You cannot remove your own admin role",
+    "inviteTitle": "Invite New Admin",
+    "inviteDesc": "Send an invitation email. The recipient will sign up with admin access.",
+    "inviteEmail": "Email Address",
+    "inviteBtn": "Send Invite",
+    "inviting": "Sending...",
+    "inviteSuccess": "Invitation sent to {email}",
+    "inviteError": "Failed to send invitation"
   },
   "chart": {
     "voteDistribution": "Vote Distribution",

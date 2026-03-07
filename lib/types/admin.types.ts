@@ -30,6 +30,15 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export interface AdminUserWithRole {
+  clerkId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  imageUrl: string;
+  isAdmin: boolean;
+}
+
 export interface VoterRecord {
   _id: string;
   voterName: string;

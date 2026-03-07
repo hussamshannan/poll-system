@@ -8,7 +8,8 @@
   "sidebar": {
     "overview": "نظرة عامة",
     "allPolls": "جميع الاستطلاعات",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "admins": "المسؤولون"
   },
   "landing": {
     "badge": "استطلاعات المنظمة",
@@ -68,7 +69,9 @@
     "editPollDesc": "تحديث تفاصيل الاستطلاع",
     "editBtn": "تعديل",
     "settingsTitle": "الإعدادات",
-    "settingsDesc": "اختر ثيم ومظهراً للموقع بأكمله"
+    "settingsDesc": "اختر ثيم ومظهراً للموقع بأكمله",
+    "adminsTitle": "إدارة المسؤولين",
+    "adminsDesc": "إدارة صلاحيات الوصول للمسؤولين على المنصة"
   },
   "stats": {
     "totalUsers": "إجمالي المستخدمين",
@@ -138,6 +141,24 @@
     "export": "تصدير PDF",
     "exporting": "جار التصدير...",
     "error": "تعذّر إنشاء PDF. يرجى المحاولة مجدداً."
+  },
+  "admins": {
+    "tableTitle": "المستخدمون",
+    "colUser": "المستخدم",
+    "colRole": "الدور",
+    "colAction": "الإجراء",
+    "roleAdmin": "مسؤول",
+    "roleUser": "مستخدم",
+    "promote": "ترقية لمسؤول",
+    "demote": "إزالة الصلاحية",
+    "selfDemoteError": "لا يمكنك إزالة صلاحياتك الخاصة",
+    "inviteTitle": "دعوة مسؤول جديد",
+    "inviteDesc": "أرسل دعوة بالبريد الإلكتروني. سيتمكن المستلم من التسجيل بصلاحيات المسؤول.",
+    "inviteEmail": "البريد الإلكتروني",
+    "inviteBtn": "إرسال الدعوة",
+    "inviting": "جار الإرسال...",
+    "inviteSuccess": "تم إرسال الدعوة إلى {email}",
+    "inviteError": "فشل إرسال الدعوة"
   },
   "chart": {
     "voteDistribution": "توزيع الأصوات",

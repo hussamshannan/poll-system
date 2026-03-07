@@ -11,6 +11,7 @@ export const routes = {
     pollDetail: (id: string) => `/admin/polls/${id}`,
     pollEdit: (id: string) => `/admin/polls/${id}/edit`,
     settings: "/admin/settings",
+    admins: "/admin/admins",
   },
   auth: {
     signIn: "/sign-in",

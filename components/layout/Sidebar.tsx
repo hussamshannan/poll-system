@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { LayoutDashboard, FileText, Palette, LucideIcon } from "lucide-react";
+import { LayoutDashboard, FileText, Palette, ShieldCheck, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { routes } from "@/lib/config/routes";
 
@@ -24,6 +24,7 @@ const SIDEBAR_CONFIGS: Record<string, NavItem[]> = {
     },
     { href: routes.admin.polls, labelKey: "allPolls", icon: FileText },
     { href: routes.admin.settings, labelKey: "settings", icon: Palette },
+    { href: routes.admin.admins, labelKey: "admins", icon: ShieldCheck },
   ],
 };
 
