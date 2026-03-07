@@ -1,22 +1,22 @@
 {
   "nav": {
-    "polls": "الاستطلاعات",
+    "polls": "الاستبانات",
     "admin": "الإدارة",
     "signIn": "دخول المسؤول",
     "langSwitch": "English"
   },
   "sidebar": {
     "overview": "نظرة عامة",
-    "allPolls": "جميع الاستطلاعات",
+    "allPolls": "الاستبانات",
     "settings": "الإعدادات",
     "admins": "المسؤولون"
   },
   "landing": {
-    "badge": "استطلاعات المنظمة",
+    "badge": "استبيانات المنظمة",
     "title": "C.B.O.S.R.A",
-    "subtitle": "جمعية المتقاعدين من بنك السودان المركزي",
+    "subtitle": "رابطة معاشيي بنك السودان المركزي",
     "description": "نظام التصويت للقرارات التنظيمية وإشراك الأعضاء.",
-    "browsePolls": "تصفح الاستطلاعات",
+    "browsePolls": "تصفح الاستبانات",
     "signIn": "دخول المسؤول",
     "feature1Title": "تصويت بسيط",
     "feature1Desc": "أدخل اسمك ورقم هاتفك فقط — لا حاجة لحساب. صوّت في ثوانٍ.",
@@ -27,17 +27,17 @@
     "copyright": "© {year} PollApp. جميع الحقوق محفوظة."
   },
   "vote": {
-    "title": "الاستطلاعات النشطة",
-    "available": "يوجد {count} استطلاع مفتوح",
-    "availablePlural": "يوجد {count} استطلاعات مفتوحة",
-    "noneOpen": "لا توجد استطلاعات مفتوحة حالياً",
-    "noActivePolls": "لا توجد استطلاعات نشطة",
-    "noActivePollsDesc": "لا توجد استطلاعات مفتوحة الآن. تفقد لاحقاً.",
+    "title": "الاستبانات النشطة",
+    "available": "يوجد {count} استبان مفتوح",
+    "availablePlural": "يوجد {count} استبيانات مفتوحة",
+    "noneOpen": "لا توجد استبيانات مفتوحة حالياً",
+    "noActivePolls": "لا توجد استبيانات نشطة",
+    "noActivePollsDesc": "لا توجد استبيانات مفتوحة الآن. تفقد لاحقاً.",
     "votes": "صوت"
   },
   "votePage": {
-    "expired": "انتهت مدة هذا الاستطلاع ولم يعد يقبل التصويت.",
-    "closed": "هذا الاستطلاع غير مفتوح للتصويت حالياً.",
+    "expired": "انتهت مدة هذا الاستبان ولم يعد يقبل التصويت.",
+    "closed": "هذا الاستبان غير مفتوح للتصويت حالياً.",
     "submit": "إرسال الصوت",
     "submitting": "جار الإرسال...",
     "selectOne": "اختر خياراً واحداً",
@@ -60,13 +60,13 @@
   "admin": {
     "dashboardTitle": "لوحة التحكم",
     "dashboardDesc": "نظرة عامة على المنصة",
-    "allPollsTitle": "جميع الاستطلاعات",
-    "allPollsDesc": "إدارة جميع الاستطلاعات على المنصة",
-    "createPoll": "إنشاء استطلاع",
-    "newPollTitle": "إنشاء استطلاع",
-    "newPollDesc": "أنشئ استطلاعاً جديداً لمنظمتك",
-    "editPollTitle": "تعديل الاستطلاع",
-    "editPollDesc": "تحديث تفاصيل الاستطلاع",
+    "allPollsTitle": "جميع الاستبانات",
+    "allPollsDesc": "إدارة جميع الاستبانات على المنصة",
+    "createPoll": "إنشاء استبان",
+    "newPollTitle": "إنشاء استبان",
+    "newPollDesc": "أنشئ استباناً جديداً لمنظمتك",
+    "editPollTitle": "تعديل الاستبان",
+    "editPollDesc": "تحديث تفاصيل الاستبان",
     "editBtn": "تعديل",
     "settingsTitle": "الإعدادات",
     "settingsDesc": "اختر ثيم ومظهراً للموقع بأكمله",
@@ -75,21 +75,21 @@
   },
   "stats": {
     "totalUsers": "إجمالي المستخدمين",
-    "totalPolls": "إجمالي الاستطلاعات",
+    "totalPolls": "إجمالي الاستبانات",
     "totalVotes": "إجمالي الأصوات",
-    "activePolls": "الاستطلاعات النشطة",
-    "pollsToday": "استطلاعات اليوم",
+    "activePolls": "الاستبانات النشطة",
+    "pollsToday": "استبيانات اليوم",
     "votesToday": "أصوات اليوم"
   },
   "pollTable": {
-    "tableTitle": "جميع الاستطلاعات",
+    "tableTitle": "جميع الاستبانات",
     "colTitle": "العنوان",
     "colStatus": "الحالة",
     "colVotes": "الأصوات",
     "colCreator": "المنشئ",
     "colCreated": "تاريخ الإنشاء",
-    "empty": "لا توجد استطلاعات بعد.",
-    "deleteTitle": "حذف الاستطلاع",
+    "empty": "لا توجد استبيانات بعد.",
+    "deleteTitle": "حذف الاستبان",
     "deleteDesc": "هل أنت متأكد من حذف \"{title}\"؟ لا يمكن التراجع عن هذا الإجراء."
   },
   "voterTable": {
@@ -101,8 +101,8 @@
     "empty": "لم يتم تسجيل أي أصوات بعد."
   },
   "pollForm": {
-    "createTitle": "إنشاء استطلاع جديد",
-    "editTitle": "تعديل الاستطلاع",
+    "createTitle": "إنشاء استبان جديد",
+    "editTitle": "تعديل الاستبان",
     "titleLabel": "العنوان",
     "titlePlaceholder": "ماذا تريد أن تسأل؟",
     "descLabel": "الوصف (اختياري)",
@@ -112,8 +112,8 @@
     "expiry": "تاريخ الانتهاء (اختياري)",
     "creating": "جار الإنشاء...",
     "updating": "جار التحديث...",
-    "createBtn": "إنشاء الاستطلاع",
-    "updateBtn": "تحديث الاستطلاع"
+    "createBtn": "إنشاء الاستبان",
+    "updateBtn": "تحديث الاستبان"
   },
   "optionEditor": {
     "label": "الخيارات",
