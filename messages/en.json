@@ -1,0 +1,142 @@
+{
+  "nav": {
+    "polls": "Polls",
+    "admin": "Admin",
+    "signIn": "Admin Sign In",
+    "langSwitch": "عربي"
+  },
+  "sidebar": {
+    "overview": "Overview",
+    "allPolls": "All Polls",
+    "settings": "Settings"
+  },
+  "landing": {
+    "badge": "Organisational Polling",
+    "title": "C.B.O.S.R.A",
+    "subtitle": "Central Bank of Sudan Retirees Association",
+    "description": "voting system for organizational decision-making and member engagement.",
+    "browsePolls": "Browse Polls",
+    "signIn": "Admin Sign In",
+    "feature1Title": "Simple Voting",
+    "feature1Desc": "Just enter your name and phone number — no account needed. Vote in seconds.",
+    "feature2Title": "Real-time Analytics",
+    "feature2Desc": "Admins see live results with charts, trends, and exportable PDF reports.",
+    "feature3Title": "One Vote Per Person",
+    "feature3Desc": "Phone number uniqueness ensures fair, tamper-resistant results.",
+    "copyright": "© {year} PollApp. All rights reserved."
+  },
+  "vote": {
+    "title": "Active Polls",
+    "available": "{count} open poll available",
+    "availablePlural": "{count} open polls available",
+    "noneOpen": "No polls are currently open",
+    "noActivePolls": "No active polls",
+    "noActivePollsDesc": "There are no open polls right now. Check back later.",
+    "votes": "votes"
+  },
+  "votePage": {
+    "expired": "This poll has expired and is no longer accepting votes.",
+    "closed": "This poll is not currently open for voting.",
+    "submit": "Cast Vote",
+    "submitting": "Submitting...",
+    "selectOne": "Select one option",
+    "selectMany": "Select one or more options"
+  },
+  "confirmation": {
+    "title": "Thank you, {name}!",
+    "subtitle": "Your vote on \"{poll}\" has been recorded.",
+    "votedFor": "You voted for:"
+  },
+  "pollCard": {
+    "votes": "votes"
+  },
+  "status": {
+    "open": "Open",
+    "closed": "Closed",
+    "draft": "Draft",
+    "expired": "Expired"
+  },
+  "admin": {
+    "dashboardTitle": "Admin Dashboard",
+    "dashboardDesc": "Platform-wide overview",
+    "allPollsTitle": "All Polls",
+    "allPollsDesc": "Manage all polls across the platform",
+    "createPoll": "Create Poll",
+    "newPollTitle": "Create Poll",
+    "newPollDesc": "Set up a new poll for your organisation",
+    "editPollTitle": "Edit Poll",
+    "editPollDesc": "Update the poll details",
+    "editBtn": "Edit",
+    "settingsTitle": "Settings",
+    "settingsDesc": "Choose a theme and appearance for the entire site"
+  },
+  "stats": {
+    "totalUsers": "Total Users",
+    "totalPolls": "Total Polls",
+    "totalVotes": "Total Votes",
+    "activePolls": "Active Polls",
+    "pollsToday": "Polls Created Today",
+    "votesToday": "Votes Today"
+  },
+  "pollTable": {
+    "tableTitle": "All Polls",
+    "colTitle": "Title",
+    "colStatus": "Status",
+    "colVotes": "Votes",
+    "colCreator": "Creator",
+    "colCreated": "Created",
+    "empty": "No polls yet.",
+    "deleteTitle": "Delete Poll",
+    "deleteDesc": "Are you sure you want to delete \"{title}\"? This action cannot be undone."
+  },
+  "voterTable": {
+    "tableTitle": "Voters",
+    "colName": "Name",
+    "colPhone": "Phone",
+    "colVotedFor": "Voted For",
+    "colVotedAt": "Voted At",
+    "empty": "No votes recorded yet."
+  },
+  "pollForm": {
+    "createTitle": "Create a New Poll",
+    "editTitle": "Edit Poll",
+    "titleLabel": "Title",
+    "titlePlaceholder": "What would you like to ask?",
+    "descLabel": "Description (optional)",
+    "descPlaceholder": "Add more context...",
+    "multipleVotes": "Allow selecting multiple options",
+    "anonymous": "Anonymous voting",
+    "expiry": "Expiration (optional)",
+    "creating": "Creating...",
+    "updating": "Updating...",
+    "createBtn": "Create Poll",
+    "updateBtn": "Update Poll"
+  },
+  "optionEditor": {
+    "label": "Options",
+    "placeholder": "Option {n}",
+    "addOption": "Add Option"
+  },
+  "voterForm": {
+    "nameLabel": "Your Name",
+    "namePlaceholder": "Enter your full name",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "+966501234567"
+  },
+  "theme": {
+    "chooseTitle": "Choose Theme",
+    "appearanceTitle": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "save": "Save Changes",
+    "saved": "Saved",
+    "saving": "Saving...",
+    "discard": "Discard",
+    "successMsg": "Theme saved! Changes are now live site-wide."
+  },
+  "pdf": {
+    "export": "Export PDF",
+    "exporting": "Exporting...",
+    "error": "Could not generate PDF. Please try again."
+  }
+}

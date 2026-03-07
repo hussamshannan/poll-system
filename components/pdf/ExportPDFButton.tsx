@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import { PollAnalytics } from "@/lib/types/analytics.types";
@@ -11,6 +12,7 @@ interface ExportPDFButtonProps {
 }
 
 export function ExportPDFButton({ analytics, pollTitle }: ExportPDFButtonProps) {
+  const t = useTranslations("pdf");
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -19,7 +21,6 @@ export function ExportPDFButton({ analytics, pollTitle }: ExportPDFButtonProps) 
     setExportError(null);
 
     try {
-      // Dynamic import keeps react-pdf out of the initial bundle
       const [{ pdf }, { AnalyticsPDFDocument }] = await Promise.all([
         import("@react-pdf/renderer"),
         import("./AnalyticsPDFDocument"),
@@ -37,7 +38,7 @@ export function ExportPDFButton({ analytics, pollTitle }: ExportPDFButtonProps) 
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("PDF export error:", error);
-      setExportError("Could not generate PDF. Please try again.");
+      setExportError(t("error"));
     } finally {
       setExporting(false);
     }
@@ -47,7 +48,7 @@ export function ExportPDFButton({ analytics, pollTitle }: ExportPDFButtonProps) 
     <div className="flex flex-col items-start gap-1">
       <Button onClick={handleExport} disabled={exporting} variant="outline">
         <FileDown className="ms-2 h-4 w-4" />
-        {exporting ? "Exporting..." : "Export PDF"}
+        {exporting ? t("exporting") : t("export")}
       </Button>
       {exportError && (
         <p className="text-sm text-destructive">{exportError}</p>

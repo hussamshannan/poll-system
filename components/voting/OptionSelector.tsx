@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,10 +24,12 @@ export function OptionSelector({
   allowMultiple,
   disabled,
 }: OptionSelectorProps) {
+  const t = useTranslations("votePage");
+
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-muted-foreground">
-        {allowMultiple ? "Select one or more options" : "Select one option"}
+        {allowMultiple ? t("selectMany") : t("selectOne")}
       </p>
       <div className="space-y-2">
         {options.map((option) => {

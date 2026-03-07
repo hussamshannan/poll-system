@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,7 @@ interface ThemeEditorProps {
 }
 
 export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
+  const t = useTranslations("theme");
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>(initialTheme.themeName);
   const [selectedMode, setSelectedMode] = useState<ThemeMode>(initialTheme.mode);
   const [isPending, startTransition] = useTransition();
@@ -40,7 +42,7 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
     startTransition(async () => {
       const result = await updateSiteTheme({ themeName: selectedTheme, mode: selectedMode });
       if (result.success) {
-        setMessage({ type: "success", text: "Theme saved! Changes are now live site-wide." });
+        setMessage({ type: "success", text: t("successMsg") });
       } else {
         setMessage({ type: "error", text: result.error });
       }
@@ -55,7 +57,7 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
       {/* Theme picker */}
       <Card>
         <CardHeader>
-          <CardTitle>Choose Theme</CardTitle>
+          <CardTitle>{t("chooseTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -125,7 +127,7 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
       {/* Mode toggle */}
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
+          <CardTitle>{t("appearanceTitle")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -135,7 +137,7 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
               className="flex-1 gap-2"
             >
               <Sun className="h-4 w-4" />
-              Light
+              {t("light")}
             </Button>
             <Button
               variant={selectedMode === "dark" ? "default" : "outline"}
@@ -143,7 +145,7 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
               className="flex-1 gap-2"
             >
               <Moon className="h-4 w-4" />
-              Dark
+              {t("dark")}
             </Button>
           </div>
         </CardContent>
@@ -158,7 +160,7 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
         )}
         <div className="flex gap-2">
           <Button onClick={handleSave} disabled={isPending} className="flex-1">
-            {isPending ? "Saving..." : hasChanges ? "Save Changes" : "Saved"}
+            {isPending ? t("saving") : hasChanges ? t("save") : t("saved")}
           </Button>
           {hasChanges && (
             <Button
@@ -169,7 +171,7 @@ export function ThemeEditor({ initialTheme }: ThemeEditorProps) {
               }}
               disabled={isPending}
             >
-              Discard
+              {t("discard")}
             </Button>
           )}
         </div>

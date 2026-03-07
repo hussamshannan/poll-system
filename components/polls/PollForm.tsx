@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ interface PollFormProps {
 }
 
 export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
+  const t = useTranslations("pollForm");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -58,7 +60,7 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{poll ? "Edit Poll" : "Create a New Poll"}</CardTitle>
+        <CardTitle>{poll ? t("editTitle") : t("createTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -69,11 +71,11 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">{t("titleLabel")}</Label>
             <Input
               id="title"
               {...form.register("title")}
-              placeholder="What would you like to ask?"
+              placeholder={t("titlePlaceholder")}
             />
             {form.formState.errors.title && (
               <p className="text-sm text-destructive">
@@ -83,11 +85,11 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description">{t("descLabel")}</Label>
             <Textarea
               id="description"
               {...form.register("description")}
-              placeholder="Add more context..."
+              placeholder={t("descPlaceholder")}
               rows={3}
             />
           </div>
@@ -107,9 +109,7 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
               checked={form.watch("allowMultipleVotes")}
               onCheckedChange={(val) => form.setValue("allowMultipleVotes", val)}
             />
-            <Label htmlFor="allowMultipleVotes">
-              Allow selecting multiple options
-            </Label>
+            <Label htmlFor="allowMultipleVotes">{t("multipleVotes")}</Label>
           </div>
 
           <div className="flex items-center gap-3">
@@ -118,11 +118,11 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
               checked={form.watch("isAnonymous")}
               onCheckedChange={(val) => form.setValue("isAnonymous", val)}
             />
-            <Label htmlFor="isAnonymous">Anonymous voting</Label>
+            <Label htmlFor="isAnonymous">{t("anonymous")}</Label>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="expiresAt">Expiration (optional)</Label>
+            <Label htmlFor="expiresAt">{t("expiry")}</Label>
             <Input
               id="expiresAt"
               type="datetime-local"
@@ -133,11 +133,11 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
           <Button type="submit" disabled={isPending} className="w-full">
             {isPending
               ? poll
-                ? "Updating..."
-                : "Creating..."
+                ? t("updating")
+                : t("creating")
               : poll
-                ? "Update Poll"
-                : "Create Poll"}
+                ? t("updateBtn")
+                : t("createBtn")}
           </Button>
         </form>
       </CardContent>

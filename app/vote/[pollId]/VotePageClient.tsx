@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { VoteSubmit } from "@/components/voting/VoteSubmit";
 import { VoteConfirmation } from "@/components/voting/VoteConfirmation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -13,6 +14,7 @@ interface VotePageClientProps {
 }
 
 export function VotePageClient({ poll }: VotePageClientProps) {
+  const t = useTranslations("votePage");
   const [submittedName, setSubmittedName] = useState("");
   const [submittedOptions, setSubmittedOptions] = useState<string[]>([]);
 
@@ -34,9 +36,7 @@ export function VotePageClient({ poll }: VotePageClientProps) {
     return (
       <Alert>
         <AlertDescription>
-          {poll.isExpired
-            ? "This poll has expired and is no longer accepting votes."
-            : "This poll is not currently open for voting."}
+          {poll.isExpired ? t("expired") : t("closed")}
         </AlertDescription>
       </Alert>
     );

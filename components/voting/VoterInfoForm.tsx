@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -16,15 +19,17 @@ export function VoterInfoForm({
   errors,
   disabled,
 }: VoterInfoFormProps) {
+  const t = useTranslations("voterForm");
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="voterName">Your Name</Label>
+        <Label htmlFor="voterName">{t("nameLabel")}</Label>
         <Input
           id="voterName"
           value={name}
           onChange={(e) => onChange("name", e.target.value)}
-          placeholder="Enter your full name"
+          placeholder={t("namePlaceholder")}
           disabled={disabled}
         />
         {errors?.name && (
@@ -33,13 +38,13 @@ export function VoterInfoForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="voterPhone">Phone Number</Label>
+        <Label htmlFor="voterPhone">{t("phoneLabel")}</Label>
         <Input
           id="voterPhone"
           type="tel"
           value={phone}
           onChange={(e) => onChange("phone", e.target.value)}
-          placeholder="+966501234567"
+          placeholder={t("phonePlaceholder")}
           dir="ltr"
           disabled={disabled}
         />

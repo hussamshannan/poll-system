@@ -2,28 +2,28 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { LayoutDashboard, FileText, Palette, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { routes } from "@/lib/config/routes";
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
   exact?: boolean;
 }
 
-// All sidebar variants are defined here — no icon components cross the server boundary
 const SIDEBAR_CONFIGS: Record<string, NavItem[]> = {
   admin: [
     {
       href: routes.admin.dashboard,
-      label: "Overview",
+      labelKey: "overview",
       icon: LayoutDashboard,
       exact: true,
     },
-    { href: routes.admin.polls, label: "All Polls", icon: FileText },
-    { href: routes.admin.settings, label: "Settings", icon: Palette },
+    { href: routes.admin.polls, labelKey: "allPolls", icon: FileText },
+    { href: routes.admin.settings, labelKey: "settings", icon: Palette },
   ],
 };
 
@@ -34,6 +34,7 @@ interface SidebarProps {
 
 export function Sidebar({ variant, sectionLabel }: SidebarProps) {
   const pathname = usePathname();
+  const t = useTranslations("sidebar");
   const items = SIDEBAR_CONFIGS[variant] ?? [];
 
   const isActiveItem = (item: NavItem) =>
@@ -67,7 +68,7 @@ export function Sidebar({ variant, sectionLabel }: SidebarProps) {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {item.label}
+                  {t(item.labelKey as Parameters<typeof t>[0])}
                 </Link>
               );
             })}
@@ -90,7 +91,7 @@ export function Sidebar({ variant, sectionLabel }: SidebarProps) {
               )}
             >
               <Icon className="h-5 w-5" />
-              {item.label}
+              {t(item.labelKey as Parameters<typeof t>[0])}
             </Link>
           );
         })}

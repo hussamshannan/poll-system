@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Trash2, Pencil, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -18,6 +19,7 @@ interface PollTableProps {
 }
 
 export function PollTable({ polls: initialPolls, total, onDelete }: PollTableProps) {
+  const t = useTranslations("pollTable");
   const [polls, setPolls] = useState(initialPolls);
   const [deleteTarget, setDeleteTarget] = useState<AdminPoll | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -36,24 +38,22 @@ export function PollTable({ polls: initialPolls, total, onDelete }: PollTablePro
   const columns: Column<AdminPoll>[] = [
     {
       key: "title",
-      header: "Title",
-      render: (poll) => (
-        <span className="font-medium">{poll.title}</span>
-      ),
+      header: t("colTitle"),
+      render: (poll) => <span className="font-medium">{poll.title}</span>,
     },
     {
       key: "status",
-      header: "Status",
+      header: t("colStatus"),
       render: (poll) => <StatusBadge status={poll.status} />,
     },
     {
       key: "votes",
-      header: "Votes",
+      header: t("colVotes"),
       render: (poll) => poll.totalVotes,
     },
     {
       key: "creator",
-      header: "Creator",
+      header: t("colCreator"),
       className: "hidden sm:table-cell",
       render: (poll) => (
         <span className="text-muted-foreground">{poll.creatorEmail}</span>
@@ -61,7 +61,7 @@ export function PollTable({ polls: initialPolls, total, onDelete }: PollTablePro
     },
     {
       key: "created",
-      header: "Created",
+      header: t("colCreated"),
       className: "hidden sm:table-cell",
       render: (poll) => (
         <span className="text-muted-foreground">{formatDate(poll.createdAt)}</span>
@@ -75,9 +75,9 @@ export function PollTable({ polls: initialPolls, total, onDelete }: PollTablePro
         columns={columns}
         data={polls}
         keyExtractor={(p) => p._id}
-        title="All Polls"
+        title={t("tableTitle")}
         total={total}
-        emptyMessage="No polls yet."
+        emptyMessage={t("empty")}
         actions={(poll) => (
           <div className="flex items-center justify-end gap-1">
             <Button variant="ghost" size="icon" asChild>
@@ -104,8 +104,8 @@ export function PollTable({ polls: initialPolls, total, onDelete }: PollTablePro
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-        title="Delete Poll"
-        description={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
+        title={t("deleteTitle")}
+        description={t("deleteDesc", { title: deleteTarget?.title ?? "" })}
         onConfirm={handleDelete}
         loading={isPending}
       />

@@ -1,6 +1,7 @@
 "use client";
 
 import { Control, useFieldArray } from "react-hook-form";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash2 } from "lucide-react";
@@ -12,6 +13,7 @@ interface OptionEditorProps {
 }
 
 export function OptionEditor({ control, errors }: OptionEditorProps) {
+  const t = useTranslations("optionEditor");
   const { fields, append, remove } = useFieldArray({
     control,
     name: "options",
@@ -19,12 +21,12 @@ export function OptionEditor({ control, errors }: OptionEditorProps) {
 
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium">Options</label>
+      <label className="text-sm font-medium">{t("label")}</label>
       {fields.map((field, index) => (
         <div key={field.id} className="flex items-center gap-2">
           <Input
             {...control.register(`options.${index}.text`)}
-            placeholder={`Option ${index + 1}`}
+            placeholder={t("placeholder", { n: index + 1 })}
           />
           {fields.length > 2 && (
             <Button
@@ -51,7 +53,7 @@ export function OptionEditor({ control, errors }: OptionEditorProps) {
           onClick={() => append({ text: "" })}
         >
           <PlusCircle className="me-2 h-4 w-4" />
-          Add Option
+          {t("addOption")}
         </Button>
       )}
     </div>

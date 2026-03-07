@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -12,6 +15,8 @@ export function VoteConfirmation({
   selectedOptions,
   voterName,
 }: VoteConfirmationProps) {
+  const t = useTranslations("confirmation");
+
   return (
     <Card>
       <CardContent className="flex flex-col items-center text-center gap-4 py-10">
@@ -19,15 +24,15 @@ export function VoteConfirmation({
           <CheckCircle2 className="h-8 w-8 text-green-600" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">Thank you, {voterName}!</h2>
+          <h2 className="text-xl font-bold">{t("title", { name: voterName })}</h2>
           <p className="text-muted-foreground mt-1">
-            Your vote on &ldquo;{pollTitle}&rdquo; has been recorded.
+            {t("subtitle", { poll: pollTitle })}
           </p>
         </div>
         {selectedOptions.length > 0 && (
           <div className="w-full text-start space-y-1">
             <p className="text-sm font-medium text-muted-foreground">
-              You voted for:
+              {t("votedFor")}
             </p>
             <ul className="space-y-1">
               {selectedOptions.map((opt, i) => (

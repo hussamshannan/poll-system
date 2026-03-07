@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Pencil } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { AnalyticsPanel } from "@/components/analytics/AnalyticsPanel";
 import { VoterTable } from "@/components/admin/VoterTable";
@@ -30,6 +31,8 @@ export function PollDetailClient({
   voters,
   votersTotal,
 }: PollDetailClientProps) {
+  const t = useTranslations("admin");
+
   return (
     <div className="space-y-8">
       {/* Header row */}
@@ -45,7 +48,7 @@ export function PollDetailClient({
           <Button variant="outline" asChild>
             <Link href={routes.admin.pollEdit(pollId)}>
               <Pencil className="me-2 h-4 w-4" />
-              Edit
+              {t("editBtn")}
             </Link>
           </Button>
         </div>

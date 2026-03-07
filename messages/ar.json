@@ -1,0 +1,142 @@
+{
+  "nav": {
+    "polls": "الاستطلاعات",
+    "admin": "الإدارة",
+    "signIn": "دخول المسؤول",
+    "langSwitch": "English"
+  },
+  "sidebar": {
+    "overview": "نظرة عامة",
+    "allPolls": "جميع الاستطلاعات",
+    "settings": "الإعدادات"
+  },
+  "landing": {
+    "badge": "استطلاعات المنظمة",
+    "title": "C.B.O.S.R.A",
+    "subtitle": "جمعية المتقاعدين من بنك السودان المركزي",
+    "description": "نظام التصويت للقرارات التنظيمية وإشراك الأعضاء.",
+    "browsePolls": "تصفح الاستطلاعات",
+    "signIn": "دخول المسؤول",
+    "feature1Title": "تصويت بسيط",
+    "feature1Desc": "أدخل اسمك ورقم هاتفك فقط — لا حاجة لحساب. صوّت في ثوانٍ.",
+    "feature2Title": "نتائج فورية",
+    "feature2Desc": "يرى المسؤولون النتائج المباشرة مع رسوم بيانية وتقارير PDF قابلة للتصدير.",
+    "feature3Title": "صوت واحد لكل شخص",
+    "feature3Desc": "فرادة رقم الهاتف تضمن نتائج عادلة ومقاومة للتلاعب.",
+    "copyright": "© {year} PollApp. جميع الحقوق محفوظة."
+  },
+  "vote": {
+    "title": "الاستطلاعات النشطة",
+    "available": "يوجد {count} استطلاع مفتوح",
+    "availablePlural": "يوجد {count} استطلاعات مفتوحة",
+    "noneOpen": "لا توجد استطلاعات مفتوحة حالياً",
+    "noActivePolls": "لا توجد استطلاعات نشطة",
+    "noActivePollsDesc": "لا توجد استطلاعات مفتوحة الآن. تفقد لاحقاً.",
+    "votes": "صوت"
+  },
+  "votePage": {
+    "expired": "انتهت مدة هذا الاستطلاع ولم يعد يقبل التصويت.",
+    "closed": "هذا الاستطلاع غير مفتوح للتصويت حالياً.",
+    "submit": "إرسال الصوت",
+    "submitting": "جار الإرسال...",
+    "selectOne": "اختر خياراً واحداً",
+    "selectMany": "اختر خياراً أو أكثر"
+  },
+  "confirmation": {
+    "title": "شكراً لك، {name}!",
+    "subtitle": "تم تسجيل صوتك في \"{poll}\".",
+    "votedFor": "صوّتَ لصالح:"
+  },
+  "pollCard": {
+    "votes": "صوت"
+  },
+  "status": {
+    "open": "مفتوح",
+    "closed": "مغلق",
+    "draft": "مسودة",
+    "expired": "منتهي"
+  },
+  "admin": {
+    "dashboardTitle": "لوحة التحكم",
+    "dashboardDesc": "نظرة عامة على المنصة",
+    "allPollsTitle": "جميع الاستطلاعات",
+    "allPollsDesc": "إدارة جميع الاستطلاعات على المنصة",
+    "createPoll": "إنشاء استطلاع",
+    "newPollTitle": "إنشاء استطلاع",
+    "newPollDesc": "أنشئ استطلاعاً جديداً لمنظمتك",
+    "editPollTitle": "تعديل الاستطلاع",
+    "editPollDesc": "تحديث تفاصيل الاستطلاع",
+    "editBtn": "تعديل",
+    "settingsTitle": "الإعدادات",
+    "settingsDesc": "اختر ثيم ومظهراً للموقع بأكمله"
+  },
+  "stats": {
+    "totalUsers": "إجمالي المستخدمين",
+    "totalPolls": "إجمالي الاستطلاعات",
+    "totalVotes": "إجمالي الأصوات",
+    "activePolls": "الاستطلاعات النشطة",
+    "pollsToday": "استطلاعات اليوم",
+    "votesToday": "أصوات اليوم"
+  },
+  "pollTable": {
+    "tableTitle": "جميع الاستطلاعات",
+    "colTitle": "العنوان",
+    "colStatus": "الحالة",
+    "colVotes": "الأصوات",
+    "colCreator": "المنشئ",
+    "colCreated": "تاريخ الإنشاء",
+    "empty": "لا توجد استطلاعات بعد.",
+    "deleteTitle": "حذف الاستطلاع",
+    "deleteDesc": "هل أنت متأكد من حذف \"{title}\"؟ لا يمكن التراجع عن هذا الإجراء."
+  },
+  "voterTable": {
+    "tableTitle": "المصوّتون",
+    "colName": "الاسم",
+    "colPhone": "الهاتف",
+    "colVotedFor": "صوّت لصالح",
+    "colVotedAt": "وقت التصويت",
+    "empty": "لم يتم تسجيل أي أصوات بعد."
+  },
+  "pollForm": {
+    "createTitle": "إنشاء استطلاع جديد",
+    "editTitle": "تعديل الاستطلاع",
+    "titleLabel": "العنوان",
+    "titlePlaceholder": "ماذا تريد أن تسأل؟",
+    "descLabel": "الوصف (اختياري)",
+    "descPlaceholder": "أضف مزيداً من السياق...",
+    "multipleVotes": "السماح باختيار خيارات متعددة",
+    "anonymous": "التصويت المجهول",
+    "expiry": "تاريخ الانتهاء (اختياري)",
+    "creating": "جار الإنشاء...",
+    "updating": "جار التحديث...",
+    "createBtn": "إنشاء الاستطلاع",
+    "updateBtn": "تحديث الاستطلاع"
+  },
+  "optionEditor": {
+    "label": "الخيارات",
+    "placeholder": "الخيار {n}",
+    "addOption": "إضافة خيار"
+  },
+  "voterForm": {
+    "nameLabel": "الاسم",
+    "namePlaceholder": "أدخل اسمك الكامل",
+    "phoneLabel": "رقم الهاتف",
+    "phonePlaceholder": "+966501234567"
+  },
+  "theme": {
+    "chooseTitle": "اختر الثيم",
+    "appearanceTitle": "المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "save": "حفظ التغييرات",
+    "saved": "تم الحفظ",
+    "saving": "جار الحفظ...",
+    "discard": "تجاهل",
+    "successMsg": "تم حفظ الثيم! التغييرات مباشرة على الموقع."
+  },
+  "pdf": {
+    "export": "تصدير PDF",
+    "exporting": "جار التصدير...",
+    "error": "تعذّر إنشاء PDF. يرجى المحاولة مجدداً."
+  }
+}

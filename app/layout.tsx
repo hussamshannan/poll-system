@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { headers } from "next/headers";
+import { Geist, Geist_Mono, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { getSiteTheme } from "@/actions/theme.actions";
 import "./globals.css";
 
@@ -15,52 +16,47 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const arabicFont = IBM_Plex_Sans_Arabic({
+  variable: "--font-arabic",
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "PollApp — Create & Share Polls",
   description: "Create polls, collect votes, and view analytics",
 };
-
-const RTL_LOCALES = ["ar", "he", "fa", "ur", "ps", "ku", "sd", "yi"];
-
-function detectDir(acceptLanguage: string | null): "ltr" | "rtl" {
-  if (!acceptLanguage) return "ltr";
-  const primary = acceptLanguage
-    .split(",")[0]
-    .split(";")[0]
-    .trim()
-    .toLowerCase()
-    .split("-")[0];
-  return RTL_LOCALES.includes(primary) ? "rtl" : "ltr";
-}
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [themeResult, headersList] = await Promise.all([
+  const [themeResult, locale, messages] = await Promise.all([
     getSiteTheme(),
-    headers(),
+    getLocale(),
+    getMessages(),
   ]);
 
   const theme = themeResult.success ? themeResult.data : null;
-  const dir = detectDir(headersList.get("accept-language"));
-
   const themeName = theme?.themeName ?? "vercel";
   const isDark = theme?.mode === "dark";
+  const dir = locale === "ar" ? "rtl" : "ltr";
 
   return (
     <ClerkProvider>
       <html
-        lang={dir === "rtl" ? "ar" : "en"}
+        lang={locale}
         dir={dir}
         data-theme={themeName}
         className={isDark ? "dark" : ""}
       >
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} ${arabicFont.variable} antialiased`}
         >
-          {children}
+          <NextIntlClientProvider messages={messages}>
+            {children}
+          </NextIntlClientProvider>
         </body>
       </html>
     </ClerkProvider>

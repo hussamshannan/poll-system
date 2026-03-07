@@ -4,6 +4,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Arabic font override for RTL */
+html[dir="rtl"] {
+  font-family: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Flip directional icons in RTL */
+[dir="rtl"] [data-dir-flip] {
+  transform: scaleX(-1);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

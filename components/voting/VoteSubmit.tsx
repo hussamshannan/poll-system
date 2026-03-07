@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +29,7 @@ export function VoteSubmit({
   error,
   fieldErrors,
 }: VoteSubmitProps) {
+  const t = useTranslations("votePage");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -100,7 +102,7 @@ export function VoteSubmit({
             disabled={isPending || selectedIds.length === 0}
             className="w-full"
           >
-            {isPending ? "Submitting..." : "Cast Vote"}
+            {isPending ? t("submitting") : t("submit")}
           </Button>
         </form>
       </CardContent>

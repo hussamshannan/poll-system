@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EditPollClient } from "./EditPollClient";
 import { getPollById } from "@/actions/poll.actions";
@@ -9,7 +10,10 @@ interface EditPollPageProps {
 
 export default async function EditPollPage({ params }: EditPollPageProps) {
   const { pollId } = await params;
-  const result = await getPollById(pollId);
+  const [result, t] = await Promise.all([
+    getPollById(pollId),
+    getTranslations("admin"),
+  ]);
 
   if (!result.success) {
     notFound();
@@ -17,7 +21,7 @@ export default async function EditPollPage({ params }: EditPollPageProps) {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <PageHeader title="Edit Poll" description="Update the poll details" />
+      <PageHeader title={t("editPollTitle")} description={t("editPollDesc")} />
       <EditPollClient poll={result.data} />
     </div>
   );

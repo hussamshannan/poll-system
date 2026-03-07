@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { Poll } from "@/lib/types/poll.types";
@@ -12,6 +15,7 @@ interface PollCardProps {
 }
 
 export function PollCard({ poll, href, actions }: PollCardProps) {
+  const t = useTranslations("pollCard");
   const status = poll.isExpired ? "expired" : poll.status;
   const defaultHref = href ?? routes.vote.poll(poll._id);
 
@@ -34,7 +38,9 @@ export function PollCard({ poll, href, actions }: PollCardProps) {
           </p>
         )}
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{poll.totalVotes} votes</span>
+          <span>
+            {poll.totalVotes} {t("votes")}
+          </span>
           <span>{formatRelative(poll.createdAt)}</span>
         </div>
         {actions && <div className="mt-3 flex gap-2">{actions}</div>}
