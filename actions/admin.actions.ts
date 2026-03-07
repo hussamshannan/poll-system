@@ -294,14 +294,10 @@ export async function inviteAdmin(
   const adminErr = await requireAdmin();
   if (adminErr) return adminErr;
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://poll-nine-tan.vercel.app";
-
   try {
     const client = await clerkClient();
     await client.invitations.createInvitation({
       emailAddress: email,
-      redirectUrl: `${appUrl}/sign-up`,
       publicMetadata: { role: "admin" },
       ignoreExisting: true,
     });
