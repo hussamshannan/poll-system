@@ -296,12 +296,18 @@ export async function inviteAdmin(
 
   const trimmedEmail = email.trim().toLowerCase();
 
-  // Build absolute redirectUrl so Clerk knows where to send the invited user.
-  // VERCEL_URL is automatically set by Vercel (no https prefix); fall back to
-  // NEXT_PUBLIC_APP_URL or localhost for local development.
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
+  // Build the absolute redirectUrl for the invitation email link.
+  // Priority:
+  //  1. NEXT_PUBLIC_APP_URL   — manually set in Vercel env vars (most explicit)
+  //  2. VERCEL_PROJECT_PRODUCTION_URL — auto-set by Vercel to the stable prod domain
+  //  3. localhost fallback for local dev
+  // NOTE: VERCEL_URL is intentionally NOT used — it's deployment-specific and
+  //       changes on every deploy, producing broken invitation links.
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : "http://localhost:3000");
   const redirectUrl = `${baseUrl}/sign-up`;
 
   try {
