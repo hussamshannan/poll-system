@@ -12,14 +12,16 @@ import { PollAnalytics } from "@/lib/types/analytics.types";
 import { VoterRecord } from "@/lib/types/admin.types";
 
 /* ── Font registration ───────────────────────────────────────────────
-   NotoSansArabic covers Latin + Arabic glyphs and supports text shaping.
-   Paths resolve against the app origin at browser render time.
+   Amiri is a classic Unicode Arabic typeface with stable, non-variable
+   OpenType tables that react-pdf/fontkit processes reliably.
+   Noto Sans Arabic uses complex variable font metadata that confuses
+   fontkit, causing glyph substitution (GSUB) failures and missing letters.
    ─────────────────────────────────────────────────────────────────── */
 Font.register({
-  family: "NotoSansArabic",
+  family: "Amiri",
   fonts: [
-    { src: "/fonts/NotoSansArabic-Regular.ttf", fontWeight: 400 },
-    { src: "/fonts/NotoSansArabic-Bold.ttf", fontWeight: 700 },
+    { src: "/fonts/Amiri-Regular.ttf", fontWeight: 400 },
+    { src: "/fonts/Amiri-Bold.ttf",    fontWeight: 700 },
   ],
 });
 
@@ -65,12 +67,12 @@ function makeStyles(isRTL: boolean) {
   return StyleSheet.create({
     /* Page */
     page: {
-      fontFamily: "NotoSansArabic",
-      fontSize: 10,
+      fontFamily: "Amiri",
+      fontSize: 11,          // Amiri reads better at 11pt
       color: BRAND,
       paddingTop: 36,
       paddingBottom: 52,
-      paddingHorizontal: 36,
+      paddingHorizontal: 40,
       backgroundColor: WHITE,
     },
 
@@ -83,13 +85,13 @@ function makeStyles(isRTL: boolean) {
       borderBottomStyle: "solid",
     },
     title: {
-      fontSize: 22,
+      fontSize: 24,
       fontWeight: 700,
       marginBottom: 4,
       textAlign,
     },
     subtitle: {
-      fontSize: 9,
+      fontSize: 10,
       color: MUTED,
       textAlign,
     },
@@ -97,18 +99,17 @@ function makeStyles(isRTL: boolean) {
     /* Section */
     section: { marginBottom: 18 },
     sectionTitle: {
-      fontSize: 11,
+      fontSize: 13,
       fontWeight: 700,
-      marginBottom: 8,
+      marginBottom: 10,
       color: ACCENT,
       textAlign,
-      // NOTE: no textTransform — it corrupts Arabic letter shapes
     },
 
-    /* Summary cards */
+    /* Summary cards — use fixed percentage widths to avoid flex clipping */
     summaryRow: { flexDirection: rowDir, gap: 8, marginBottom: 4 },
     summaryCard: {
-      flex: 1,
+      width: "31%",
       backgroundColor: LIGHT,
       borderRadius: 4,
       padding: 10,
@@ -117,67 +118,66 @@ function makeStyles(isRTL: boolean) {
       borderStyle: "solid",
     },
     summaryLabel: {
-      fontSize: 7,
+      fontSize: 8,
       color: MUTED,
       marginBottom: 3,
       textAlign,
-      // NOTE: no textTransform — uppercase has undefined behaviour on Arabic
     },
-    summaryValue: { fontSize: 20, fontWeight: 700, textAlign },
-    summaryValueSmall: { fontSize: 10, fontWeight: 700, textAlign },
+    summaryValue:      { fontSize: 22, fontWeight: 700, textAlign },
+    summaryValueSmall: { fontSize: 11, fontWeight: 700, textAlign },
 
     /* Option breakdown */
-    optionRow: { marginBottom: 8 },
+    optionRow: { marginBottom: 10 },
     optionHeader: {
       flexDirection: rowDir,
       justifyContent: "space-between",
-      marginBottom: 3,
+      marginBottom: 4,
     },
     optionText: {
-      fontSize: 9,
+      fontSize: 10,
       fontWeight: 700,
       flex: 1,
       textAlign,
-      paddingRight: isRTL ? 0 : 6,
-      paddingLeft:  isRTL ? 6 : 0,
+      paddingRight: isRTL ? 0 : 8,
+      paddingLeft:  isRTL ? 8 : 0,
     },
     optionMeta: { fontSize: 9, color: MUTED },
-    barBg:   { height: 6, backgroundColor: BORDER, borderRadius: 3 },
-    barFill: { height: 6, backgroundColor: ACCENT, borderRadius: 3 },
+    barBg:   { height: 7, backgroundColor: BORDER, borderRadius: 3 },
+    barFill: { height: 7, backgroundColor: ACCENT, borderRadius: 3 },
 
     /* Shared table primitives */
     tableHead: {
       flexDirection: rowDir,
       backgroundColor: ACCENT,
-      paddingVertical: 5,
-      paddingHorizontal: 6,
+      paddingVertical: 6,
+      paddingHorizontal: 8,
       borderRadius: 3,
       marginBottom: 1,
     },
     tableHeadCell: {
-      fontSize: 8,
+      fontSize: 9,
       fontWeight: 700,
       color: WHITE,
       textAlign,
     },
     tableRow: {
       flexDirection: rowDir,
-      paddingVertical: 4,
-      paddingHorizontal: 6,
+      paddingVertical: 5,
+      paddingHorizontal: 8,
       borderBottomWidth: 1,
       borderBottomColor: BORDER,
       borderBottomStyle: "solid",
     },
     tableRowAlt: {
       flexDirection: rowDir,
-      paddingVertical: 4,
-      paddingHorizontal: 6,
+      paddingVertical: 5,
+      paddingHorizontal: 8,
       borderBottomWidth: 1,
       borderBottomColor: BORDER,
       borderBottomStyle: "solid",
       backgroundColor: LIGHT,
     },
-    tableCell: { fontSize: 8, color: BRAND, textAlign },
+    tableCell: { fontSize: 9, color: BRAND, textAlign },
 
     /* Votes-over-time column widths */
     colDate:  { flex: 2 },
