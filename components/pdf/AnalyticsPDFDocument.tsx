@@ -12,16 +12,14 @@ import { PollAnalytics } from "@/lib/types/analytics.types";
 import { VoterRecord } from "@/lib/types/admin.types";
 
 /* ── Font registration ───────────────────────────────────────────────
-   Amiri is a classic Unicode Arabic typeface with stable, non-variable
-   OpenType tables that react-pdf/fontkit processes reliably.
-   Noto Sans Arabic uses complex variable font metadata that confuses
-   fontkit, causing glyph substitution (GSUB) failures and missing letters.
+   IBM Plex Sans Arabic — same font used by the web app (html[dir="rtl"]).
+   Covers full Arabic + Latin Unicode ranges with stable OpenType tables.
    ─────────────────────────────────────────────────────────────────── */
 Font.register({
-  family: "Amiri",
+  family: "IBMPlexSansArabic",
   fonts: [
-    { src: "/fonts/Amiri-Regular.ttf", fontWeight: 400 },
-    { src: "/fonts/Amiri-Bold.ttf",    fontWeight: 700 },
+    { src: "/fonts/IBMPlexSansArabic-Regular.ttf", fontWeight: 400 },
+    { src: "/fonts/IBMPlexSansArabic-Bold.ttf",    fontWeight: 700 },
   ],
 });
 
@@ -46,8 +44,6 @@ export interface PDFTranslations {
   voteBreakdown: string;
   vote: string;
   votes: string;
-  votesOverTime: string;
-  date: string;
   footer: string;
   /** Called at render time to format page counters. */
   formatPage: (current: number, total: number) => string;
@@ -67,8 +63,8 @@ function makeStyles(isRTL: boolean) {
   return StyleSheet.create({
     /* Page */
     page: {
-      fontFamily: "Amiri",
-      fontSize: 11,          // Amiri reads better at 11pt
+      fontFamily: "IBMPlexSansArabic",
+      fontSize: 10,
       color: BRAND,
       paddingTop: 36,
       paddingBottom: 52,
@@ -179,10 +175,6 @@ function makeStyles(isRTL: boolean) {
     },
     tableCell: { fontSize: 9, color: BRAND, textAlign },
 
-    /* Votes-over-time column widths */
-    colDate:  { flex: 2 },
-    colCount: { flex: 1 },
-
     /* Voter-records column widths */
     colName:     { flex: 2 },
     colPhone:    { flex: 2 },
@@ -215,16 +207,6 @@ function makeStyles(isRTL: boolean) {
 }
 
 /* ── Helpers ────────────────────────────────────────────────────── */
-function fmtDate(raw: string, locale: string) {
-  const d = new Date(raw);
-  if (isNaN(d.getTime())) return raw;
-  return d.toLocaleDateString(locale, {
-    month: "short",
-    day:   "numeric",
-    year:  "numeric",
-  });
-}
-
 function fmtDateTime(raw: string, locale: string) {
   const d = new Date(raw);
   if (isNaN(d.getTime())) return raw;
@@ -262,7 +244,7 @@ export function AnalyticsPDFDocument({
   const dateLocale   = isRTL ? "ar-u-nu-latn" : "en-US"; // Latin numerals in dates for both
   const s            = makeStyles(isRTL);
 
-  const { title, totalVotes, optionBreakdown = [], votesOverTime = [] } = analytics;
+  const { title, totalVotes, optionBreakdown = [] } = analytics;
 
   const exportDate = new Date().toLocaleDateString(dateLocale, {
     year:  "numeric",
@@ -330,25 +312,6 @@ export function AnalyticsPDFDocument({
                 </View>
               );
             })}
-          </View>
-        )}
-
-        {/* Votes over time */}
-        {votesOverTime.length > 0 && (
-          <View style={s.section}>
-            <Text style={s.sectionTitle}>{t.votesOverTime}</Text>
-            <View style={s.tableHead}>
-              <Text style={[s.tableHeadCell, s.colDate]}>{t.date}</Text>
-              <Text style={[s.tableHeadCell, s.colCount]}>{t.votes}</Text>
-            </View>
-            {votesOverTime.map((row, i) => (
-              <View key={row.date} style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}>
-                <Text style={[s.tableCell, s.colDate]}>
-                  {fmtDate(row.date, dateLocale)}
-                </Text>
-                <Text style={[s.tableCell, s.colCount]}>{row.count}</Text>
-              </View>
-            ))}
           </View>
         )}
 

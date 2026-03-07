@@ -42,8 +42,6 @@ export function ExportPDFButton({ analytics, pollTitle, voters }: ExportPDFButto
         voteBreakdown: t("voteBreakdown"),
         vote:          t("vote"),
         votes:         t("votes"),
-        votesOverTime: t("votesOverTime"),
-        date:          t("date"),
         footer:        t("footer"),
         // Use next-intl's proper interpolation instead of manual string replace
         formatPage: (current, total) =>
