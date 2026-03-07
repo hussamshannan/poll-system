@@ -294,20 +294,27 @@ export async function inviteAdmin(
   const adminErr = await requireAdmin();
   if (adminErr) return adminErr;
 
+  const trimmedEmail = email.trim().toLowerCase();
+
   try {
     const client = await clerkClient();
     await client.invitations.createInvitation({
-      emailAddress: email,
+      emailAddress: trimmedEmail,
       publicMetadata: { role: "admin" },
       ignoreExisting: true,
     });
     return ok({ invited: true });
   } catch (error) {
-    console.error("inviteAdmin error:", error);
-    // Extract Clerk's detailed error message if available
-    const clerkMessage =
-      (error as { errors?: { message: string }[] })?.errors?.[0]?.message;
-    const message = clerkMessage ?? (error instanceof Error ? error.message : "Failed to send invitation");
+    const clerkErr = error as {
+      errors?: { message: string; longMessage?: string; code?: string }[];
+      status?: number;
+    };
+    const firstErr = clerkErr?.errors?.[0];
+    console.error("inviteAdmin error:", JSON.stringify(clerkErr, null, 2));
+    const message =
+      firstErr?.longMessage ??
+      firstErr?.message ??
+      (error instanceof Error ? error.message : "Failed to send invitation");
     return err(message);
   }
 }
