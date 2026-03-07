@@ -140,7 +140,25 @@
   "pdf": {
     "export": "Export PDF",
     "exporting": "Exporting...",
-    "error": "Could not generate PDF. Please try again."
+    "error": "Could not generate PDF. Please try again.",
+    "reportTitle": "Analytics Report",
+    "summary": "Summary",
+    "totalVotes": "Total Votes",
+    "options": "Options",
+    "leadingOption": "Leading Option",
+    "voteBreakdown": "Vote Breakdown",
+    "vote": "vote",
+    "votes": "votes",
+    "votesOverTime": "Votes Over Time",
+    "date": "Date",
+    "footer": "PollApp · Analytics Report",
+    "page": "Page {current} of {total}",
+    "voterRecords": "Voter Records",
+    "name": "Name",
+    "phone": "Phone",
+    "votedFor": "Voted For",
+    "votedAt": "Voted At",
+    "noVoters": "No votes recorded yet."
   },
   "admins": {
     "tableTitle": "Users",

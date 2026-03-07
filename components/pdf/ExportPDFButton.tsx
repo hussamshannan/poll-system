@@ -1,19 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import { PollAnalytics } from "@/lib/types/analytics.types";
+import { VoterRecord } from "@/lib/types/admin.types";
+import type { PDFTranslations } from "./AnalyticsPDFDocument";
 
 interface ExportPDFButtonProps {
   analytics: PollAnalytics;
   pollTitle: string;
+  voters: VoterRecord[];
 }
 
-export function ExportPDFButton({ analytics, pollTitle }: ExportPDFButtonProps) {
-  const t = useTranslations("pdf");
-  const [exporting, setExporting] = useState(false);
+export function ExportPDFButton({ analytics, pollTitle, voters }: ExportPDFButtonProps) {
+  const t      = useTranslations("pdf");
+  const locale = useLocale();
+
+  const [exporting,   setExporting]   = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
   const handleExport = async () => {
@@ -26,18 +31,48 @@ export function ExportPDFButton({ analytics, pollTitle }: ExportPDFButtonProps) 
         import("./AnalyticsPDFDocument"),
       ]);
 
+      // Build translations object outside PDF render (hooks unavailable inside react-pdf).
+      // formatPage is a plain function — safe to call inside react-pdf render props.
+      const translations: PDFTranslations = {
+        reportTitle:  t("reportTitle"),
+        summary:      t("summary"),
+        totalVotes:   t("totalVotes"),
+        options:      t("options"),
+        leadingOption: t("leadingOption"),
+        voteBreakdown: t("voteBreakdown"),
+        vote:          t("vote"),
+        votes:         t("votes"),
+        votesOverTime: t("votesOverTime"),
+        date:          t("date"),
+        footer:        t("footer"),
+        // Use next-intl's proper interpolation instead of manual string replace
+        formatPage: (current, total) =>
+          t("page", { current: String(current), total: String(total) }),
+        voterRecords:  t("voterRecords"),
+        name:          t("name"),
+        phone:         t("phone"),
+        votedFor:      t("votedFor"),
+        votedAt:       t("votedAt"),
+        noVoters:      t("noVoters"),
+      };
+
       const blob = await pdf(
-        <AnalyticsPDFDocument analytics={analytics} />
+        <AnalyticsPDFDocument
+          analytics={analytics}
+          locale={locale}
+          translations={translations}
+          voters={voters ?? []}
+        />
       ).toBlob();
 
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
+      const a   = document.createElement("a");
+      a.href     = url;
       a.download = `${pollTitle.replace(/\s+/g, "-")}-results.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("PDF export error:", error);
+    } catch (err) {
+      console.error("PDF export error:", err);
       setExportError(t("error"));
     } finally {
       setExporting(false);

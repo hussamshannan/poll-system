@@ -44,7 +44,7 @@ export function PollDetailClient({
           </div>
         </div>
         <div className="flex items-center gap-2 sm:shrink-0">
-          <ExportPDFButton analytics={analytics} pollTitle={pollTitle} />
+          <ExportPDFButton analytics={analytics} pollTitle={pollTitle} voters={voters} />
           <Button variant="outline" asChild>
             <Link href={routes.admin.pollEdit(pollId)}>
               <Pencil className="me-2 h-4 w-4" />

@@ -140,7 +140,25 @@
   "pdf": {
     "export": "تصدير PDF",
     "exporting": "جار التصدير...",
-    "error": "تعذّر إنشاء PDF. يرجى المحاولة مجدداً."
+    "error": "تعذّر إنشاء PDF. يرجى المحاولة مجدداً.",
+    "reportTitle": "تقرير التحليلات",
+    "summary": "الملخص",
+    "totalVotes": "إجمالي الأصوات",
+    "options": "الخيارات",
+    "leadingOption": "الخيار الرائد",
+    "voteBreakdown": "توزيع الأصوات",
+    "vote": "صوت",
+    "votes": "أصوات",
+    "votesOverTime": "الأصوات عبر الزمن",
+    "date": "التاريخ",
+    "footer": "PollApp · تقرير التحليلات",
+    "page": "صفحة {current} من {total}",
+    "voterRecords": "سجل المصوتين",
+    "name": "الاسم",
+    "phone": "الهاتف",
+    "votedFor": "صوّت لـ",
+    "votedAt": "وقت التصويت",
+    "noVoters": "لا توجد أصوات مسجلة بعد."
   },
   "admins": {
     "tableTitle": "المستخدمون",
