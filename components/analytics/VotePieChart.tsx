@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OptionVoteCount } from "@/lib/types/analytics.types";
 import { useChartColors } from "@/hooks/useChartColors";
+import { useTranslations } from "next-intl";
 
 interface VotePieChartProps {
   data: OptionVoteCount[];
@@ -18,6 +19,7 @@ interface VotePieChartProps {
 
 export function VotePieChart({ data }: VotePieChartProps) {
   const c = useChartColors();
+  const t = useTranslations("chart");
 
   const chartData = data.map((d) => ({
     name: d.text,
@@ -27,7 +29,7 @@ export function VotePieChart({ data }: VotePieChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Vote Breakdown</CardTitle>
+        <CardTitle className="text-lg">{t("voteBreakdown")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

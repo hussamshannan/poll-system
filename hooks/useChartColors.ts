@@ -2,15 +2,29 @@
 
 import { useEffect, useState } from "react";
 
-/** Forces the browser to resolve a CSS custom property to a computed rgb() string. */
+/**
+ * Resolves a CSS custom property to a #rrggbb hex string that SVG fill
+ * attributes can always parse — even when the variable holds an oklch() value.
+ */
 function resolveColor(cssVar: string): string {
+  // Step 1: get the computed value (may be oklch, rgb, or hex)
   const el = document.createElement("span");
   el.style.display = "none";
   el.style.color = `var(${cssVar})`;
   document.body.appendChild(el);
-  const color = getComputedStyle(el).color;
+  const computed = getComputedStyle(el).color;
   document.body.removeChild(el);
-  return color;
+
+  // Step 2: run through Canvas 2D which always serialises to #rrggbb / rgba()
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = computed;
+    return ctx.fillStyle; // guaranteed hex or rgba string
+  } catch {
+    return computed;
+  }
 }
 
 function getCSSVar(name: string): string {

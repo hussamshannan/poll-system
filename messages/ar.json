@@ -138,5 +138,12 @@
     "export": "تصدير PDF",
     "exporting": "جار التصدير...",
     "error": "تعذّر إنشاء PDF. يرجى المحاولة مجدداً."
+  },
+  "chart": {
+    "voteDistribution": "توزيع الأصوات",
+    "voteBreakdown": "تفصيل الأصوات",
+    "votingTrend": "اتجاه التصويت",
+    "noActivity": "لا يوجد نشاط تصويت بعد",
+    "votes": "أصوات"
   }
 }

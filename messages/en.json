@@ -138,5 +138,12 @@
     "export": "Export PDF",
     "exporting": "Exporting...",
     "error": "Could not generate PDF. Please try again."
+  },
+  "chart": {
+    "voteDistribution": "Vote Distribution",
+    "voteBreakdown": "Vote Breakdown",
+    "votingTrend": "Voting Trend",
+    "noActivity": "No voting activity yet",
+    "votes": "Votes"
   }
 }

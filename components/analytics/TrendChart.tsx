@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VoteOverTime } from "@/lib/types/analytics.types";
 import { useChartColors } from "@/hooks/useChartColors";
+import { useTranslations } from "next-intl";
 
 interface TrendChartProps {
   data: VoteOverTime[];
@@ -19,16 +20,17 @@ interface TrendChartProps {
 
 export function TrendChart({ data }: TrendChartProps) {
   const c = useChartColors();
+  const t = useTranslations("chart");
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Voting Trend</CardTitle>
+        <CardTitle className="text-lg">{t("votingTrend")}</CardTitle>
       </CardHeader>
       <CardContent>
         {data.length === 0 ? (
           <p className="text-muted-foreground text-sm text-center py-8">
-            No voting activity yet
+            {t("noActivity")}
           </p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
