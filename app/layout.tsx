@@ -49,11 +49,9 @@ export default async function RootLayout({
         lang={locale}
         dir={dir}
         data-theme={themeName}
-        className={isDark ? "dark" : ""}
+        className={`${geistSans.variable} ${geistMono.variable} ${arabicFont.variable}${isDark ? " dark" : ""}`}
       >
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} ${arabicFont.variable} antialiased`}
-        >
+        <body className="antialiased">
           <NextIntlClientProvider messages={messages}>
             {children}
           </NextIntlClientProvider>

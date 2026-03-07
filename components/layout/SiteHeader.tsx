@@ -43,7 +43,7 @@ export async function SiteHeader({
         <Separator orientation="vertical" className="h-5" />
 
         {items.length > 0 && (
-          <nav className="flex items-center gap-1">
+          <nav className="hidden sm:flex items-center gap-1">
             {items.map((item) => (
               <Link key={item.href} href={item.href}>
                 <Button variant="ghost" size="sm">
@@ -60,7 +60,7 @@ export async function SiteHeader({
           {showAuth && (
             <>
               <SignedIn>
-                <Link href={routes.admin.dashboard}>
+                <Link href={routes.admin.dashboard} className="hidden sm:inline-flex">
                   <Button variant="ghost" size="sm">
                     {t("admin")}
                   </Button>
