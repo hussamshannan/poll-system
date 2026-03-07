@@ -37,6 +37,7 @@ export interface AdminUserWithRole {
   lastName: string;
   imageUrl: string;
   isAdmin: boolean;
+  isMaster: boolean;
 }
 
 export interface VoterRecord {

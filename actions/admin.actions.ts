@@ -16,6 +16,8 @@ import {
 } from "@/lib/types/admin.types";
 import { requireAdmin } from "@/lib/utils/admin.utils";
 
+const MASTER_ADMIN_EMAIL = "hussamshannan5@gmail.com";
+
 export async function adminDeletePoll(
   pollId: string
 ): Promise<ActionResult<{ deleted: true }>> {
@@ -209,14 +211,18 @@ export async function listUsersWithRoles(): Promise<
     const client = await clerkClient();
     const { data: clerkUsers } = await client.users.getUserList({ limit: 100 });
 
-    const users: AdminUserWithRole[] = clerkUsers.map((u) => ({
-      clerkId: u.id,
-      email: u.emailAddresses[0]?.emailAddress ?? "",
-      firstName: u.firstName ?? "",
-      lastName: u.lastName ?? "",
-      imageUrl: u.imageUrl,
-      isAdmin: u.publicMetadata?.role === "admin",
-    }));
+    const users: AdminUserWithRole[] = clerkUsers.map((u) => {
+      const email = u.emailAddresses[0]?.emailAddress ?? "";
+      return {
+        clerkId: u.id,
+        email,
+        firstName: u.firstName ?? "",
+        lastName: u.lastName ?? "",
+        imageUrl: u.imageUrl,
+        isAdmin: u.publicMetadata?.role === "admin",
+        isMaster: email === MASTER_ADMIN_EMAIL,
+      };
+    });
 
     return ok(users);
   } catch (error) {
@@ -240,6 +246,11 @@ export async function setAdminRole(
 
   try {
     const client = await clerkClient();
+    const target = await client.users.getUser(clerkId);
+    const targetEmail = target.emailAddresses[0]?.emailAddress ?? "";
+    if (!makeAdmin && targetEmail === MASTER_ADMIN_EMAIL) {
+      return err("Cannot remove master admin role");
+    }
     await client.users.updateUser(clerkId, {
       publicMetadata: { role: makeAdmin ? "admin" : null },
     });
@@ -248,6 +259,32 @@ export async function setAdminRole(
   } catch (error) {
     console.error("setAdminRole error:", error);
     return err("Failed to update role");
+  }
+}
+
+export async function deleteAdminUser(
+  clerkId: string
+): Promise<ActionResult<{ deleted: true }>> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  // Prevent deleting yourself
+  const { userId } = await auth();
+  if (userId === clerkId) return err("You cannot delete your own account");
+
+  try {
+    const client = await clerkClient();
+    const target = await client.users.getUser(clerkId);
+    const targetEmail = target.emailAddresses[0]?.emailAddress ?? "";
+    if (targetEmail === MASTER_ADMIN_EMAIL) {
+      return err("Cannot delete the master admin account");
+    }
+    await client.users.deleteUser(clerkId);
+    revalidatePath("/admin/admins");
+    return ok({ deleted: true });
+  } catch (error) {
+    console.error("deleteAdminUser error:", error);
+    return err("Failed to delete user");
   }
 }
 
