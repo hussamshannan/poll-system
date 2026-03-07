@@ -301,7 +301,7 @@ export async function inviteAdmin(
     const client = await clerkClient();
     await client.invitations.createInvitation({
       emailAddress: email,
-      redirectUrl: `${appUrl}/sign-in`,
+      redirectUrl: `${appUrl}/sign-up`,
       publicMetadata: { role: "admin" },
       ignoreExisting: true,
     });
