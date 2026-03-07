@@ -87,7 +87,7 @@ export function Sidebar({ variant, sectionLabel }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors",
+                "flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors text-center",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
