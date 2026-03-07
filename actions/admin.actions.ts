@@ -294,17 +294,24 @@ export async function inviteAdmin(
   const adminErr = await requireAdmin();
   if (adminErr) return adminErr;
 
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://poll-nine-tan.vercel.app";
+
   try {
     const client = await clerkClient();
     await client.invitations.createInvitation({
       emailAddress: email,
+      redirectUrl: `${appUrl}/sign-in`,
       publicMetadata: { role: "admin" },
+      ignoreExisting: true,
     });
     return ok({ invited: true });
   } catch (error) {
     console.error("inviteAdmin error:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to send invitation";
+    // Extract Clerk's detailed error message if available
+    const clerkMessage =
+      (error as { errors?: { message: string }[] })?.errors?.[0]?.message;
+    const message = clerkMessage ?? (error instanceof Error ? error.message : "Failed to send invitation");
     return err(message);
   }
 }
