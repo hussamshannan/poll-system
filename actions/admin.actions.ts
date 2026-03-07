@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { connectToDatabase } from "@/lib/db/mongoose";
 import Poll from "@/lib/models/Poll.model";
@@ -297,17 +298,14 @@ export async function inviteAdmin(
   const trimmedEmail = email.trim().toLowerCase();
 
   // Build the absolute redirectUrl for the invitation email link.
-  // Priority:
-  //  1. NEXT_PUBLIC_APP_URL   — manually set in Vercel env vars (most explicit)
-  //  2. VERCEL_PROJECT_PRODUCTION_URL — auto-set by Vercel to the stable prod domain
-  //  3. localhost fallback for local dev
-  // NOTE: VERCEL_URL is intentionally NOT used — it's deployment-specific and
-  //       changes on every deploy, producing broken invitation links.
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : "http://localhost:3000");
+  // Read the actual request host from headers — this is always the domain the
+  // admin accessed, so it works correctly on any deployment (prod, preview, local).
+  const headersList = await headers();
+  const host  = headersList.get("x-forwarded-host") ?? headersList.get("host");
+  const proto = headersList.get("x-forwarded-proto") ?? "https";
+  const baseUrl = host
+    ? `${proto}://${host}`
+    : (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000");
   const redirectUrl = `${baseUrl}/sign-up`;
 
   try {
