@@ -89,7 +89,7 @@ export function HeroVoteLoop() {
     <div
       ref={containerRef}
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 hidden lg:block"
+      className="pointer-events-none absolute inset-0 hidden xl:block"
     >
       <div className="absolute top-1/2 start-[6%] flex -translate-y-1/2 flex-col gap-4 opacity-70">
         {[0, 1, 2].map((i) => (
