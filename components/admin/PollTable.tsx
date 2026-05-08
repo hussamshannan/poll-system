@@ -52,14 +52,6 @@ export function PollTable({ polls: initialPolls, total, onDelete }: PollTablePro
       render: (poll) => poll.totalVotes,
     },
     {
-      key: "creator",
-      header: t("colCreator"),
-      className: "hidden sm:table-cell",
-      render: (poll) => (
-        <span className="text-muted-foreground">{poll.creatorEmail}</span>
-      ),
-    },
-    {
       key: "created",
       header: t("colCreated"),
       className: "hidden sm:table-cell",

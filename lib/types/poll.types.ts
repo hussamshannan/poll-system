@@ -13,6 +13,7 @@ export interface Poll {
   allowMultipleVotes: boolean;
   isAnonymous: boolean;
   expiresAt: string | null;
+  releaseAt: string | null;
   createdBy: string;
   totalVotes: number;
   createdAt: string;
@@ -23,19 +24,21 @@ export interface Poll {
 export interface CreatePollInput {
   title: string;
   description?: string;
-  options: { text: string }[];
+  options: { _id?: string; text: string }[];
   allowMultipleVotes?: boolean;
   isAnonymous?: boolean;
   expiresAt?: string | null;
+  releaseAt?: string | null;
 }
 
 export interface UpdatePollInput {
   pollId: string;
   title?: string;
   description?: string;
-  options?: { text: string }[];
+  options?: { _id?: string; text: string }[];
   status?: "draft" | "open" | "closed";
   allowMultipleVotes?: boolean;
   isAnonymous?: boolean;
   expiresAt?: string | null;
+  releaseAt?: string | null;
 }

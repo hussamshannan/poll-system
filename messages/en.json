@@ -12,18 +12,11 @@
     "admins": "Admins"
   },
   "landing": {
-    "badge": "Organisational Polling",
     "title": "C.B.O.S.R.A",
     "subtitle": "Central Bank of Sudan Retirees Association",
     "description": "voting system for organizational decision-making and member engagement.",
     "browsePolls": "Browse Polls",
     "signIn": "Admin Sign In",
-    "feature1Title": "Simple Voting",
-    "feature1Desc": "Just enter your name and phone number — no account needed. Vote in seconds.",
-    "feature2Title": "Real-time Analytics",
-    "feature2Desc": "Admins see live results with charts, trends, and exportable PDF reports.",
-    "feature3Title": "One Vote Per Person",
-    "feature3Desc": "Phone number uniqueness ensures fair, tamper-resistant results.",
     "copyright": "© {year} PollApp. All rights reserved."
   },
   "vote": {
@@ -38,6 +31,7 @@
   "votePage": {
     "expired": "This poll has expired and is no longer accepting votes.",
     "closed": "This poll is not currently open for voting.",
+    "notReleased": "This poll opens on {date}.",
     "submit": "Cast Vote",
     "submitting": "Submitting...",
     "selectOne": "Select one option",
@@ -55,7 +49,8 @@
     "open": "Open",
     "closed": "Closed",
     "draft": "Draft",
-    "expired": "Expired"
+    "expired": "Expired",
+    "scheduled": "Scheduled"
   },
   "admin": {
     "dashboardTitle": "Admin Dashboard",
@@ -68,6 +63,11 @@
     "editPollTitle": "Edit Poll",
     "editPollDesc": "Update the poll details",
     "editBtn": "Edit",
+    "resetVotesBtn": "Reset Votes",
+    "resetVotesTitle": "Reset Poll Votes",
+    "resetVotesDesc": "This will permanently delete all {count} votes for this poll and reset the count to zero. The poll itself will remain. This cannot be undone.",
+    "resetVotesSuccess": "All votes have been reset.",
+    "resetVotesError": "Failed to reset votes. Please try again.",
     "settingsTitle": "Settings",
     "settingsDesc": "Choose a theme and appearance for the entire site",
     "adminsTitle": "Admin Management",
@@ -109,6 +109,8 @@
     "descPlaceholder": "Add more context...",
     "multipleVotes": "Allow selecting multiple options",
     "anonymous": "Anonymous voting",
+    "releaseLabel": "Release Date (optional)",
+    "releaseHelp": "Leave blank to make the poll immediately visible. Set a future date to schedule it.",
     "expiry": "Expiration (optional)",
     "creating": "Creating...",
     "updating": "Updating...",

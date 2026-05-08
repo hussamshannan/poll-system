@@ -48,6 +48,7 @@ export default async function AdminPollDetailPage({
       pollTitle={poll.title}
       pollStatus={poll.status}
       pollIsExpired={poll.isExpired}
+      pollReleaseAt={poll.releaseAt}
       analytics={analytics}
       voters={voters}
       votersTotal={votersTotal}

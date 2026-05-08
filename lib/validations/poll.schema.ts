@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const PollOptionSchema = z.object({
+  _id: z.string().optional(),
   text: z.string().min(1, "Option text is required").max(200, "Option text too long"),
 });
 
@@ -14,6 +15,7 @@ export const CreatePollSchema = z.object({
   allowMultipleVotes: z.boolean().default(false),
   isAnonymous: z.boolean().default(false),
   expiresAt: z.string().nullable().default(null),
+  releaseAt: z.string().nullable().default(null),
 });
 
 export const UpdatePollSchema = z.object({
@@ -29,6 +31,7 @@ export const UpdatePollSchema = z.object({
   allowMultipleVotes: z.boolean().optional(),
   isAnonymous: z.boolean().optional(),
   expiresAt: z.string().nullable().optional(),
+  releaseAt: z.string().nullable().optional(),
 });
 
 export type CreatePollInput = z.infer<typeof CreatePollSchema>;

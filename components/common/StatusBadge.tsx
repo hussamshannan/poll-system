@@ -11,13 +11,14 @@ interface StatusConfig {
 }
 
 const pollStatusConfig: Record<
-  "draft" | "open" | "closed" | "expired",
+  "draft" | "open" | "closed" | "expired" | "scheduled",
   StatusConfig
 > = {
   open: { variant: "default", className: "bg-green-600 hover:bg-green-700" },
   closed: { variant: "destructive" },
   draft: { variant: "outline" },
   expired: { variant: "secondary" },
+  scheduled: { variant: "outline", className: "border-blue-400 text-blue-600" },
 };
 
 interface StatusBadgeProps {
@@ -34,7 +35,7 @@ export function StatusBadge({ status, variant, label, className }: StatusBadgePr
   const resolvedLabel =
     label ??
     (status in pollStatusConfig
-      ? t(status as "open" | "closed" | "draft" | "expired")
+      ? t(status as "open" | "closed" | "draft" | "expired" | "scheduled")
       : status);
   const resolvedClassName = className ?? config?.className;
 

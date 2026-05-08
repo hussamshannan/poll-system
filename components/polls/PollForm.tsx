@@ -35,13 +35,14 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
     defaultValues: {
       title: poll?.title || "",
       description: poll?.description || "",
-      options: poll?.options.map((o) => ({ text: o.text })) || [
+      options: poll?.options.map((o) => ({ _id: o._id, text: o.text })) || [
         { text: "" },
         { text: "" },
       ],
       allowMultipleVotes: poll?.allowMultipleVotes || false,
       isAnonymous: poll?.isAnonymous || false,
       expiresAt: poll?.expiresAt ? poll.expiresAt.slice(0, 16) : null,
+      releaseAt: poll?.releaseAt ? poll.releaseAt.slice(0, 16) : null,
     },
   });
 
@@ -119,6 +120,16 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
               onCheckedChange={(val) => form.setValue("isAnonymous", val)}
             />
             <Label htmlFor="isAnonymous">{t("anonymous")}</Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="releaseAt">{t("releaseLabel")}</Label>
+            <Input
+              id="releaseAt"
+              type="datetime-local"
+              {...form.register("releaseAt")}
+            />
+            <p className="text-xs text-muted-foreground">{t("releaseHelp")}</p>
           </div>
 
           <div className="space-y-2">

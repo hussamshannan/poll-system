@@ -5,9 +5,11 @@ import { useTranslations } from "next-intl";
 import { VoteSubmit } from "@/components/voting/VoteSubmit";
 import { VoteConfirmation } from "@/components/voting/VoteConfirmation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useVote } from "@/hooks/useVote";
 import { castVote } from "@/actions/vote.actions";
 import { Poll } from "@/lib/types/poll.types";
+import { isPollReleased } from "@/lib/utils/poll.utils";
 
 interface VotePageClientProps {
   poll: Poll;
@@ -29,6 +31,22 @@ export function VotePageClient({ poll }: VotePageClientProps) {
         selectedOptions={submittedOptions}
         voterName={submittedName}
       />
+    );
+  }
+
+  if (!isPollReleased(poll)) {
+    const releaseDate = new Date(poll.releaseAt!).toLocaleString();
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{poll.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            {t("notReleased", { date: releaseDate })}
+          </p>
+        </CardContent>
+      </Card>
     );
   }
 

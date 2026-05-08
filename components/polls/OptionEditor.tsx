@@ -24,6 +24,7 @@ export function OptionEditor({ control, errors }: OptionEditorProps) {
       <label className="text-sm font-medium">{t("label")}</label>
       {fields.map((field, index) => (
         <div key={field.id} className="flex items-center gap-2">
+          <input type="hidden" {...control.register(`options.${index}._id`)} />
           <Input
             {...control.register(`options.${index}.text`)}
             placeholder={t("placeholder", { n: index + 1 })}

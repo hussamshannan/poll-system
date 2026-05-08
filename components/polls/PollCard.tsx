@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { Poll } from "@/lib/types/poll.types";
 import { formatRelative } from "@/lib/utils/format";
 import { routes } from "@/lib/config/routes";
+import { isPollReleased } from "@/lib/utils/poll.utils";
 
 interface PollCardProps {
   poll: Poll;
@@ -16,7 +17,11 @@ interface PollCardProps {
 
 export function PollCard({ poll, href, actions }: PollCardProps) {
   const t = useTranslations("pollCard");
-  const status = poll.isExpired ? "expired" : poll.status;
+  const status = poll.isExpired
+    ? "expired"
+    : !isPollReleased(poll)
+    ? "scheduled"
+    : poll.status;
   const defaultHref = href ?? routes.vote.poll(poll._id);
 
   return (

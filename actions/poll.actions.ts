@@ -1,5 +1,6 @@
 "use server";
 
+import mongoose from "mongoose";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { connectToDatabase } from "@/lib/db/mongoose";
@@ -39,6 +40,7 @@ export async function createPoll(
       allowMultipleVotes: parsed.data.allowMultipleVotes,
       isAnonymous: parsed.data.isAnonymous,
       expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
+      releaseAt: parsed.data.releaseAt ? new Date(parsed.data.releaseAt) : null,
       createdBy: userId,
     });
 
@@ -79,10 +81,39 @@ export async function updatePoll(
     if (parsed.data.description !== undefined)
       poll.description = parsed.data.description;
     if (parsed.data.options !== undefined) {
-      poll.options = parsed.data.options.map((opt, i) => ({
-        text: opt.text,
-        order: i,
-      })) as typeof poll.options;
+      const existingIds = new Set(
+        poll.options.map((o) => o._id.toString())
+      );
+      const incomingIds = new Set(
+        parsed.data.options
+          .map((o) => o._id)
+          .filter((id): id is string => !!id && existingIds.has(id))
+      );
+
+      // Block removal of any existing option that has votes
+      const droppedIds = poll.options
+        .map((o) => o._id)
+        .filter((id) => !incomingIds.has(id.toString()));
+
+      for (const droppedId of droppedIds) {
+        const hasVotes = await Vote.exists({ pollId: poll._id, optionIds: droppedId });
+        if (hasVotes) {
+          return err(
+            "Cannot remove an option that already has votes — reset the poll first"
+          );
+        }
+      }
+
+      poll.options = parsed.data.options.map((opt, i) => {
+        const isExisting = opt._id && existingIds.has(opt._id);
+        return {
+          ...(isExisting
+            ? { _id: new mongoose.Types.ObjectId(opt._id) }
+            : {}),
+          text: opt.text,
+          order: i,
+        };
+      }) as typeof poll.options;
     }
     if (parsed.data.status !== undefined) poll.status = parsed.data.status;
     if (parsed.data.allowMultipleVotes !== undefined)
@@ -92,6 +123,11 @@ export async function updatePoll(
     if (parsed.data.expiresAt !== undefined) {
       poll.expiresAt = parsed.data.expiresAt
         ? new Date(parsed.data.expiresAt)
+        : null;
+    }
+    if (parsed.data.releaseAt !== undefined) {
+      poll.releaseAt = parsed.data.releaseAt
+        ? new Date(parsed.data.releaseAt)
         : null;
     }
 
@@ -169,7 +205,11 @@ export async function listPollsByUser(
 export async function listOpenPolls(): Promise<ActionResult<PollType[]>> {
   try {
     await connectToDatabase();
-    const polls = await Poll.find({ status: "open" })
+    const now = new Date();
+    const polls = await Poll.find({
+      status: "open",
+      $or: [{ releaseAt: null }, { releaseAt: { $lte: now } }],
+    })
       .sort({ createdAt: -1 })
       .exec();
     return ok(polls.map(serializePoll));

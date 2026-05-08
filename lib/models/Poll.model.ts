@@ -14,6 +14,7 @@ export interface IPoll extends Document {
   allowMultipleVotes: boolean;
   isAnonymous: boolean;
   expiresAt: Date | null;
+  releaseAt: Date | null;
   createdBy: string;
   totalVotes: number;
   createdAt: Date;
@@ -39,6 +40,7 @@ const PollSchema = new Schema<IPoll>(
     allowMultipleVotes: { type: Boolean, default: false },
     isAnonymous: { type: Boolean, default: false },
     expiresAt: { type: Date, default: null },
+    releaseAt: { type: Date, default: null },
     createdBy: { type: String, required: true, index: true },
     totalVotes: { type: Number, default: 0 },
   },
@@ -51,6 +53,7 @@ const PollSchema = new Schema<IPoll>(
 
 PollSchema.index({ createdBy: 1, createdAt: -1 });
 PollSchema.index({ expiresAt: 1 }, { sparse: true });
+PollSchema.index({ releaseAt: 1 }, { sparse: true });
 PollSchema.index({ title: "text", description: "text" });
 
 PollSchema.virtual("isExpired").get(function (this: IPoll) {

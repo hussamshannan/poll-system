@@ -44,6 +44,32 @@ export async function adminDeletePoll(
   }
 }
 
+export async function resetPollVotes(
+  pollId: string
+): Promise<ActionResult<{ reset: true; deletedCount: number }>> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  try {
+    await connectToDatabase();
+
+    const poll = await Poll.findById(pollId);
+    if (!poll) return err("Poll not found");
+
+    const result = await Vote.deleteMany({ pollId: poll._id });
+    await Poll.findByIdAndUpdate(pollId, { $set: { totalVotes: 0 } });
+
+    revalidatePath("/admin/polls");
+    revalidatePath(`/admin/polls/${pollId}`);
+    revalidatePath(`/vote/${pollId}`);
+
+    return ok({ reset: true, deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("resetPollVotes error:", error);
+    return err("Failed to reset poll votes");
+  }
+}
+
 export async function getSiteStats(): Promise<ActionResult<SiteStats>> {
   const adminErr = await requireAdmin();
   if (adminErr) return adminErr;

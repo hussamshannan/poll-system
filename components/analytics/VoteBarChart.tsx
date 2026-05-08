@@ -31,7 +31,7 @@ export function VoteBarChart({ data }: VoteBarChartProps) {
   }));
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="text-lg">{t("voteDistribution")}</CardTitle>
       </CardHeader>
@@ -42,7 +42,10 @@ export function VoteBarChart({ data }: VoteBarChartProps) {
             layout="vertical"
             margin={isRTL ? { right: 16 } : { left: 16 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke={c.border} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={c.border}
+            />
             <XAxis
               type="number"
               allowDecimals={false}
@@ -64,13 +67,14 @@ export function VoteBarChart({ data }: VoteBarChartProps) {
                 border: `1px solid ${c.border}`,
                 color: c.cardForeground,
                 borderRadius: c.radius,
+                
               }}
             />
             <Bar
               dataKey="votes"
               name={t("votes")}
               fill={c.primary}
-              radius={isRTL ? [4, 0, 0, 4] : [0, 4, 4, 0]}
+              radius={[4, 4, 4, 4]}
             />
           </BarChart>
         </ResponsiveContainer>

@@ -24,6 +24,8 @@ export async function castVote(
     if (poll.status !== "open") return err("Poll is not open for voting");
     if (poll.expiresAt && new Date() > poll.expiresAt)
       return err("Poll has expired");
+    if (poll.releaseAt && new Date() < poll.releaseAt)
+      return err("Poll is not yet open for voting");
 
     if (!poll.allowMultipleVotes && parsed.data.optionIds.length > 1) {
       return err("This poll only allows selecting one option");

@@ -6,12 +6,17 @@ export function isPollExpired(poll: { expiresAt: string | Date | null }): boolea
   return new Date() > new Date(poll.expiresAt);
 }
 
+export function isPollReleased(poll: { releaseAt: string | Date | null }): boolean {
+  if (!poll.releaseAt) return true;
+  return new Date() >= new Date(poll.releaseAt);
+}
+
 export function isPollOwner(poll: { createdBy: string }, userId: string): boolean {
   return poll.createdBy === userId;
 }
 
-export function isPollVotable(poll: { status: string; expiresAt: string | Date | null }): boolean {
-  return poll.status === "open" && !isPollExpired(poll);
+export function isPollVotable(poll: { status: string; expiresAt: string | Date | null; releaseAt: string | Date | null }): boolean {
+  return poll.status === "open" && !isPollExpired(poll) && isPollReleased(poll);
 }
 
 export function serializePoll(poll: IPoll): Poll {
@@ -29,6 +34,7 @@ export function serializePoll(poll: IPoll): Poll {
     allowMultipleVotes: obj.allowMultipleVotes,
     isAnonymous: obj.isAnonymous,
     expiresAt: obj.expiresAt ? obj.expiresAt.toISOString() : null,
+    releaseAt: obj.releaseAt ? obj.releaseAt.toISOString() : null,
     createdBy: obj.createdBy,
     totalVotes: obj.totalVotes,
     createdAt: obj.createdAt.toISOString(),
