@@ -3,6 +3,7 @@ import { Plus, Sparkles } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Button } from "@/components/ui/button";
+import { HeroVoteLoop } from "@/components/hero/HeroVoteLoop";
 import { routes } from "@/lib/config/routes";
 
 export default async function HomePage() {
@@ -25,6 +26,7 @@ export default async function HomePage() {
 
         {/* Hero */}
         <section className="relative flex min-h-[calc(100vh-5rem)] flex-col items-center justify-center px-4 py-20 text-center">
+          <HeroVoteLoop />
           <h1 className="max-w-3xl tracking-tight">
             <span className="block text-3xl font-medium sm:text-4xl lg:text-5xl">
               {t("subtitle")}
