@@ -9,6 +9,13 @@ import { SiteThemeSchema } from "@/lib/validations/theme.schema";
 import { requireAdmin } from "@/lib/utils/admin.utils";
 
 export async function getSiteTheme(): Promise<ActionResult<SiteTheme>> {
+  // Build-time and missing-env safety: layout.tsx calls this on every page
+  // during static generation. If the DB isn't reachable, fall back to the
+  // default theme silently rather than logging on every prerender.
+  if (!process.env.MONGODB_URI) {
+    return ok(DEFAULT_THEME);
+  }
+
   try {
     await connectToDatabase();
 
