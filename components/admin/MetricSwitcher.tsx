@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/chart";
 import { DashboardOverview } from "@/lib/types/admin.types";
 
-type MetricKey = "votes" | "polls" | "users";
+type MetricKey = "votes" | "polls" | "uniqueVoters";
 
 interface MetricSwitcherProps {
   series: DashboardOverview["metricSeries"];
@@ -49,7 +49,7 @@ export function MetricSwitcher({ series }: MetricSwitcherProps) {
           <TabsList>
             <TabsTrigger value="votes">{t("metricVotes")}</TabsTrigger>
             <TabsTrigger value="polls">{t("metricPolls")}</TabsTrigger>
-            <TabsTrigger value="users">{t("metricUsers")}</TabsTrigger>
+            <TabsTrigger value="uniqueVoters">{t("metricVoters")}</TabsTrigger>
           </TabsList>
         </Tabs>
       </CardHeader>

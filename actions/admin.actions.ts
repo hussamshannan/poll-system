@@ -167,27 +167,46 @@ export async function getDashboardOverview(): Promise<
         },
       ]);
 
-    const aggDailyUsers = (since: Date) =>
-      User.aggregate<{ _id: string; count: number }>([
-        { $match: { createdAt: { $gte: since } } },
+    // Daily count of distinct voters (one bucket per day, deduped on voterPhone)
+    const aggDailyUniqueVoters = (since: Date) =>
+      Vote.aggregate<{ _id: string; count: number }>([
+        { $match: { votedAt: { $gte: since } } },
         {
           $group: {
-            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            _id: {
+              date: {
+                $dateToString: { format: "%Y-%m-%d", date: "$votedAt" },
+              },
+              phone: "$voterPhone",
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$_id.date",
             count: { $sum: 1 },
           },
         },
       ]);
 
+    // All-time / before-cutoff count of distinct voterPhone values
+    const countUniqueVoters = (filter: Record<string, unknown> = {}) =>
+      Vote.aggregate<{ total: number }>([
+        { $match: filter },
+        { $group: { _id: "$voterPhone" } },
+        { $count: "total" },
+      ]).then((r) => r[0]?.total ?? 0);
+
     const [
       votesDaily30,
       pollsDaily30,
-      usersDaily30,
+      uniqueVotersDaily30,
       votesTotal,
       votesBeforePrev,
       activePollsCurrent,
       activePollsPrev,
-      usersTotal,
-      usersBeforePrev,
+      uniqueVotersTotal,
+      uniqueVotersBeforePrev,
       heatmapRaw,
       statusBreakdownRaw,
       topPollsRaw,
@@ -196,7 +215,7 @@ export async function getDashboardOverview(): Promise<
     ] = await Promise.all([
       aggDailyVotes(thirtyDaysAgo),
       aggDailyPolls(thirtyDaysAgo),
-      aggDailyUsers(thirtyDaysAgo),
+      aggDailyUniqueVoters(thirtyDaysAgo),
       Vote.countDocuments(),
       Vote.countDocuments({ votedAt: { $lt: fourteenDaysAgo } }),
       Poll.countDocuments({ status: "open" }),
@@ -204,8 +223,8 @@ export async function getDashboardOverview(): Promise<
         status: "open",
         createdAt: { $lt: fourteenDaysAgo },
       }),
-      User.countDocuments(),
-      User.countDocuments({ createdAt: { $lt: fourteenDaysAgo } }),
+      countUniqueVoters(),
+      countUniqueVoters({ votedAt: { $lt: fourteenDaysAgo } }),
       Vote.aggregate<{ _id: { day: number; hour: number }; count: number }>([
         { $match: { votedAt: { $gte: thirtyDaysAgo } } },
         {
@@ -244,7 +263,11 @@ export async function getDashboardOverview(): Promise<
 
     const series30Votes = buildSeries(votesDaily30, thirtyDaysAgo, 30);
     const series30Polls = buildSeries(pollsDaily30, thirtyDaysAgo, 30);
-    const series30Users = buildSeries(usersDaily30, thirtyDaysAgo, 30);
+    const series30UniqueVoters = buildSeries(
+      uniqueVotersDaily30,
+      thirtyDaysAgo,
+      30
+    );
 
     const last14 = (s: { date: string; count: number }[]) =>
       s.slice(-14).map((p) => p.count);
@@ -262,16 +285,16 @@ export async function getDashboardOverview(): Promise<
           // Sparkline of new-poll-creations as a proxy for activity
           sparkline: last14(series30Polls),
         },
-        totalUsers: {
-          current: usersTotal,
-          previous: usersBeforePrev,
-          sparkline: last14(series30Users),
+        uniqueVoters: {
+          current: uniqueVotersTotal,
+          previous: uniqueVotersBeforePrev,
+          sparkline: last14(series30UniqueVoters),
         },
       },
       metricSeries: {
         votes: series30Votes,
         polls: series30Polls,
-        users: series30Users,
+        uniqueVoters: series30UniqueVoters,
       },
       heatmap: heatmapRaw.map((h) => ({
         // MongoDB $dayOfWeek: 1 (Sun) – 7 (Sat). Convert to 0 (Mon) – 6 (Sun).

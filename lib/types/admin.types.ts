@@ -66,12 +66,12 @@ export interface DashboardOverview {
   kpis: {
     totalVotes: KpiSeries;
     activePolls: KpiSeries;
-    totalUsers: KpiSeries;
+    uniqueVoters: KpiSeries;
   };
   metricSeries: {
     votes: { date: string; count: number }[];
     polls: { date: string; count: number }[];
-    users: { date: string; count: number }[];
+    uniqueVoters: { date: string; count: number }[];
   };
   heatmap: { day: number; hour: number; count: number }[];
   statusBreakdown: { status: "draft" | "open" | "closed"; count: number }[];

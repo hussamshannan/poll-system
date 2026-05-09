@@ -118,10 +118,10 @@ export function KpiHero({ kpis }: KpiHeroProps) {
         sparkline={kpis.activePolls.sparkline}
       />
       <KpiCard
-        label={t("totalUsers")}
-        current={kpis.totalUsers.current}
-        previous={kpis.totalUsers.previous}
-        sparkline={kpis.totalUsers.sparkline}
+        label={t("uniqueVoters")}
+        current={kpis.uniqueVoters.current}
+        previous={kpis.uniqueVoters.previous}
+        sparkline={kpis.uniqueVoters.sparkline}
       />
     </div>
   );
