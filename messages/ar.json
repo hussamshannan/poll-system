@@ -7,7 +7,7 @@
   },
   "sidebar": {
     "overview": "نظرة عامة",
-    "allPolls": "الأصوات",
+    "allPolls": "التصويت",
     "settings": "الإعدادات",
     "admins": "المسؤولون"
   },
@@ -55,7 +55,7 @@
   "admin": {
     "dashboardTitle": "لوحة التحكم",
     "dashboardDesc": "نظرة عامة على المنصة",
-    "allPollsTitle": "جميع الأصوات",
+    "allPollsTitle": "مجمل التصويت",
     "allPollsDesc": "إدارة جميع الأصوات على المنصة",
     "createPoll": "إنشاء تصويت",
     "newPollTitle": "إنشاء تصويت",
