@@ -145,6 +145,12 @@ export async function getDashboardOverview(): Promise<
     fourteenDaysAgo.setUTCDate(fourteenDaysAgo.getUTCDate() - 14);
     fourteenDaysAgo.setUTCHours(0, 0, 0, 0);
 
+    const todayStart = new Date(now);
+    todayStart.setUTCHours(0, 0, 0, 0);
+
+    const yesterdayStart = new Date(todayStart);
+    yesterdayStart.setUTCDate(todayStart.getUTCDate() - 1);
+
     const aggDailyVotes = (since: Date) =>
       Vote.aggregate<{ _id: string; count: number }>([
         { $match: { votedAt: { $gte: since } } },
@@ -189,14 +195,6 @@ export async function getDashboardOverview(): Promise<
         },
       ]);
 
-    // All-time / before-cutoff count of distinct voterPhone values
-    const countUniqueVoters = (filter: Record<string, unknown> = {}) =>
-      Vote.aggregate<{ total: number }>([
-        { $match: filter },
-        { $group: { _id: "$voterPhone" } },
-        { $count: "total" },
-      ]).then((r) => r[0]?.total ?? 0);
-
     const [
       votesDaily30,
       pollsDaily30,
@@ -205,8 +203,8 @@ export async function getDashboardOverview(): Promise<
       votesBeforePrev,
       activePollsCurrent,
       activePollsPrev,
-      uniqueVotersTotal,
-      uniqueVotersBeforePrev,
+      votesTodayCount,
+      votesYesterdayCount,
       heatmapRaw,
       statusBreakdownRaw,
       topPollsRaw,
@@ -223,8 +221,10 @@ export async function getDashboardOverview(): Promise<
         status: "open",
         createdAt: { $lt: fourteenDaysAgo },
       }),
-      countUniqueVoters(),
-      countUniqueVoters({ votedAt: { $lt: fourteenDaysAgo } }),
+      Vote.countDocuments({ votedAt: { $gte: todayStart } }),
+      Vote.countDocuments({
+        votedAt: { $gte: yesterdayStart, $lt: todayStart },
+      }),
       Vote.aggregate<{ _id: { day: number; hour: number }; count: number }>([
         { $match: { votedAt: { $gte: thirtyDaysAgo } } },
         {
@@ -285,10 +285,10 @@ export async function getDashboardOverview(): Promise<
           // Sparkline of new-poll-creations as a proxy for activity
           sparkline: last14(series30Polls),
         },
-        uniqueVoters: {
-          current: uniqueVotersTotal,
-          previous: uniqueVotersBeforePrev,
-          sparkline: last14(series30UniqueVoters),
+        votesToday: {
+          current: votesTodayCount,
+          previous: votesYesterdayCount,
+          sparkline: last14(series30Votes),
         },
       },
       metricSeries: {

@@ -66,7 +66,7 @@ export interface DashboardOverview {
   kpis: {
     totalVotes: KpiSeries;
     activePolls: KpiSeries;
-    uniqueVoters: KpiSeries;
+    votesToday: KpiSeries;
   };
   metricSeries: {
     votes: { date: string; count: number }[];

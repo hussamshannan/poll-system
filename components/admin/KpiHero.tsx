@@ -22,6 +22,7 @@ interface KpiCardProps {
   current: number;
   previous: number;
   sparkline: number[];
+  compareLabel?: string;
 }
 
 const sparkConfig = {
@@ -33,7 +34,7 @@ function deltaPercent(current: number, previous: number): number | null {
   return ((current - previous) / previous) * 100;
 }
 
-function KpiCard({ label, current, previous, sparkline }: KpiCardProps) {
+function KpiCard({ label, current, previous, sparkline, compareLabel }: KpiCardProps) {
   const t = useTranslations("stats");
   const delta = useMemo(
     () => deltaPercent(current, previous),
@@ -73,7 +74,7 @@ function KpiCard({ label, current, previous, sparkline }: KpiCardProps) {
             {delta === null ? "—" : `${delta > 0 ? "+" : ""}${delta.toFixed(1)}%`}
           </span>
         </div>
-        <p className="text-xs text-muted-foreground">{t("vsLast14")}</p>
+        <p className="text-xs text-muted-foreground">{compareLabel ?? t("vsLast14")}</p>
         <ChartContainer
           config={sparkConfig}
           className="aspect-auto h-12 w-full"
@@ -118,10 +119,11 @@ export function KpiHero({ kpis }: KpiHeroProps) {
         sparkline={kpis.activePolls.sparkline}
       />
       <KpiCard
-        label={t("uniqueVoters")}
-        current={kpis.uniqueVoters.current}
-        previous={kpis.uniqueVoters.previous}
-        sparkline={kpis.uniqueVoters.sparkline}
+        label={t("votesToday")}
+        current={kpis.votesToday.current}
+        previous={kpis.votesToday.previous}
+        sparkline={kpis.votesToday.sparkline}
+        compareLabel={t("vsYesterday")}
       />
     </div>
   );
