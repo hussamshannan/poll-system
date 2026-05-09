@@ -47,3 +47,39 @@ export interface VoterRecord {
   optionTexts: string[];
   votedAt: string;
 }
+
+export interface KpiSeries {
+  current: number;
+  previous: number;
+  sparkline: number[];
+}
+
+export interface ActivityEvent {
+  type: "poll_created" | "vote_cast";
+  title: string;
+  timestamp: string;
+  meta?: string;
+  pollId?: string;
+}
+
+export interface DashboardOverview {
+  kpis: {
+    totalVotes: KpiSeries;
+    activePolls: KpiSeries;
+    totalUsers: KpiSeries;
+  };
+  metricSeries: {
+    votes: { date: string; count: number }[];
+    polls: { date: string; count: number }[];
+    users: { date: string; count: number }[];
+  };
+  heatmap: { day: number; hour: number; count: number }[];
+  statusBreakdown: { status: "draft" | "open" | "closed"; count: number }[];
+  topPolls: {
+    _id: string;
+    title: string;
+    totalVotes: number;
+    status: "draft" | "open" | "closed";
+  }[];
+  recentActivity: ActivityEvent[];
+}

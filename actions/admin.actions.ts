@@ -14,6 +14,7 @@ import {
   AdminUser,
   AdminUserWithRole,
   VoterRecord,
+  DashboardOverview,
 } from "@/lib/types/admin.types";
 import { requireAdmin } from "@/lib/utils/admin.utils";
 
@@ -107,6 +108,220 @@ export async function getSiteStats(): Promise<ActionResult<SiteStats>> {
   } catch (error) {
     console.error("getSiteStats error:", error);
     return err("Failed to get site stats");
+  }
+}
+
+function buildSeries(
+  raw: { _id: string; count: number }[],
+  startDate: Date,
+  days: number
+): { date: string; count: number }[] {
+  const map = new Map(raw.map((r) => [r._id, r.count]));
+  const out: { date: string; count: number }[] = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+    out.push({ date: key, count: map.get(key) ?? 0 });
+  }
+  return out;
+}
+
+export async function getDashboardOverview(): Promise<
+  ActionResult<DashboardOverview>
+> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  try {
+    await connectToDatabase();
+
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
+    thirtyDaysAgo.setUTCHours(0, 0, 0, 0);
+
+    const fourteenDaysAgo = new Date(now);
+    fourteenDaysAgo.setUTCDate(fourteenDaysAgo.getUTCDate() - 14);
+    fourteenDaysAgo.setUTCHours(0, 0, 0, 0);
+
+    const twentyEightDaysAgo = new Date(now);
+    twentyEightDaysAgo.setUTCDate(twentyEightDaysAgo.getUTCDate() - 28);
+    twentyEightDaysAgo.setUTCHours(0, 0, 0, 0);
+
+    const aggDailyVotes = (since: Date) =>
+      Vote.aggregate<{ _id: string; count: number }>([
+        { $match: { votedAt: { $gte: since } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$votedAt" } },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+    const aggDailyPolls = (since: Date) =>
+      Poll.aggregate<{ _id: string; count: number }>([
+        { $match: { createdAt: { $gte: since } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+    const aggDailyUsers = (since: Date) =>
+      User.aggregate<{ _id: string; count: number }>([
+        { $match: { createdAt: { $gte: since } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+    const [
+      votesDaily30,
+      pollsDaily30,
+      usersDaily30,
+      votesPrev14Count,
+      activePollsCurrent,
+      activePollsPrev,
+      usersTotal,
+      usersBeforePrev,
+      heatmapRaw,
+      statusBreakdownRaw,
+      topPollsRaw,
+      recentPolls,
+      recentVotes,
+    ] = await Promise.all([
+      aggDailyVotes(thirtyDaysAgo),
+      aggDailyPolls(thirtyDaysAgo),
+      aggDailyUsers(thirtyDaysAgo),
+      Vote.countDocuments({
+        votedAt: { $gte: twentyEightDaysAgo, $lt: fourteenDaysAgo },
+      }),
+      Poll.countDocuments({ status: "open" }),
+      Poll.countDocuments({
+        status: "open",
+        createdAt: { $lt: fourteenDaysAgo },
+      }),
+      User.countDocuments(),
+      User.countDocuments({ createdAt: { $lt: fourteenDaysAgo } }),
+      Vote.aggregate<{ _id: { day: number; hour: number }; count: number }>([
+        { $match: { votedAt: { $gte: thirtyDaysAgo } } },
+        {
+          $group: {
+            _id: {
+              day: { $dayOfWeek: "$votedAt" },
+              hour: { $hour: "$votedAt" },
+            },
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Poll.aggregate<{ _id: string; count: number }>([
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      Poll.find()
+        .sort({ totalVotes: -1 })
+        .limit(5)
+        .select("_id title totalVotes status")
+        .lean(),
+      Poll.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select("_id title createdAt")
+        .lean(),
+      Vote.find()
+        .sort({ votedAt: -1 })
+        .limit(5)
+        .populate<{ pollId: { _id: import("mongoose").Types.ObjectId; title: string } | null }>(
+          "pollId",
+          "title"
+        )
+        .select("_id voterName votedAt pollId")
+        .lean(),
+    ]);
+
+    const series30Votes = buildSeries(votesDaily30, thirtyDaysAgo, 30);
+    const series30Polls = buildSeries(pollsDaily30, thirtyDaysAgo, 30);
+    const series30Users = buildSeries(usersDaily30, thirtyDaysAgo, 30);
+
+    const last14 = (s: { date: string; count: number }[]) =>
+      s.slice(-14).map((p) => p.count);
+
+    const sumLast14 = (s: { date: string; count: number }[]) =>
+      s.slice(-14).reduce((a, p) => a + p.count, 0);
+
+    const votesCurrent = sumLast14(series30Votes);
+
+    return ok({
+      kpis: {
+        totalVotes: {
+          current: votesCurrent,
+          previous: votesPrev14Count,
+          sparkline: last14(series30Votes),
+        },
+        activePolls: {
+          current: activePollsCurrent,
+          previous: activePollsPrev,
+          // Sparkline of new-poll-creations as a proxy for activity
+          sparkline: last14(series30Polls),
+        },
+        totalUsers: {
+          current: usersTotal,
+          previous: usersBeforePrev,
+          sparkline: last14(series30Users),
+        },
+      },
+      metricSeries: {
+        votes: series30Votes,
+        polls: series30Polls,
+        users: series30Users,
+      },
+      heatmap: heatmapRaw.map((h) => ({
+        // MongoDB $dayOfWeek: 1 (Sun) – 7 (Sat). Convert to 0 (Mon) – 6 (Sun).
+        day: ((h._id.day + 5) % 7),
+        hour: h._id.hour,
+        count: h.count,
+      })),
+      statusBreakdown: statusBreakdownRaw.map((s) => ({
+        status: s._id as "draft" | "open" | "closed",
+        count: s.count,
+      })),
+      topPolls: topPollsRaw.map((p) => ({
+        _id: p._id.toString(),
+        title: p.title,
+        totalVotes: p.totalVotes ?? 0,
+        status: p.status as "draft" | "open" | "closed",
+      })),
+      recentActivity: [
+        ...recentPolls.map((p) => ({
+          type: "poll_created" as const,
+          title: p.title,
+          timestamp: p.createdAt.toISOString(),
+          pollId: p._id.toString(),
+        })),
+        ...recentVotes.map((v) => ({
+          type: "vote_cast" as const,
+          title: v.pollId?.title ?? "(deleted poll)",
+          timestamp: v.votedAt.toISOString(),
+          meta: v.voterName,
+          pollId: v.pollId?._id?.toString(),
+        })),
+      ]
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )
+        .slice(0, 10),
+    });
+  } catch (error) {
+    console.error("getDashboardOverview error:", error);
+    return err("Failed to get dashboard overview");
   }
 }
 
