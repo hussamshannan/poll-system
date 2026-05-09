@@ -145,10 +145,6 @@ export async function getDashboardOverview(): Promise<
     fourteenDaysAgo.setUTCDate(fourteenDaysAgo.getUTCDate() - 14);
     fourteenDaysAgo.setUTCHours(0, 0, 0, 0);
 
-    const twentyEightDaysAgo = new Date(now);
-    twentyEightDaysAgo.setUTCDate(twentyEightDaysAgo.getUTCDate() - 28);
-    twentyEightDaysAgo.setUTCHours(0, 0, 0, 0);
-
     const aggDailyVotes = (since: Date) =>
       Vote.aggregate<{ _id: string; count: number }>([
         { $match: { votedAt: { $gte: since } } },
@@ -186,7 +182,8 @@ export async function getDashboardOverview(): Promise<
       votesDaily30,
       pollsDaily30,
       usersDaily30,
-      votesPrev14Count,
+      votesTotal,
+      votesBeforePrev,
       activePollsCurrent,
       activePollsPrev,
       usersTotal,
@@ -200,9 +197,8 @@ export async function getDashboardOverview(): Promise<
       aggDailyVotes(thirtyDaysAgo),
       aggDailyPolls(thirtyDaysAgo),
       aggDailyUsers(thirtyDaysAgo),
-      Vote.countDocuments({
-        votedAt: { $gte: twentyEightDaysAgo, $lt: fourteenDaysAgo },
-      }),
+      Vote.countDocuments(),
+      Vote.countDocuments({ votedAt: { $lt: fourteenDaysAgo } }),
       Poll.countDocuments({ status: "open" }),
       Poll.countDocuments({
         status: "open",
@@ -253,16 +249,11 @@ export async function getDashboardOverview(): Promise<
     const last14 = (s: { date: string; count: number }[]) =>
       s.slice(-14).map((p) => p.count);
 
-    const sumLast14 = (s: { date: string; count: number }[]) =>
-      s.slice(-14).reduce((a, p) => a + p.count, 0);
-
-    const votesCurrent = sumLast14(series30Votes);
-
     return ok({
       kpis: {
         totalVotes: {
-          current: votesCurrent,
-          previous: votesPrev14Count,
+          current: votesTotal,
+          previous: votesBeforePrev,
           sparkline: last14(series30Votes),
         },
         activePolls: {
