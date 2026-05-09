@@ -82,7 +82,7 @@
     "votesToday": "أصوات اليوم"
   },
   "pollTable": {
-    "tableTitle": "جميع الأصوات",
+    "tableTitle": "مجمل التصويت",
     "colTitle": "العنوان",
     "colStatus": "الحالة",
     "colVotes": "الأصوات",
