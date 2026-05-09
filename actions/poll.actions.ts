@@ -14,6 +14,7 @@ import {
   UpdatePollSchema,
 } from "@/lib/validations/poll.schema";
 import { serializePoll } from "@/lib/utils/poll.utils";
+import { isAdmin } from "@/lib/utils/admin.utils";
 
 export async function createPoll(
   input: unknown
@@ -71,11 +72,13 @@ export async function updatePoll(
 
     await connectToDatabase();
 
-    const poll = await Poll.findOne({
-      _id: parsed.data.pollId,
-      createdBy: userId,
-    });
-    if (!poll) return err("Poll not found or access denied");
+    const poll = await Poll.findById(parsed.data.pollId);
+    if (!poll) return err("Poll not found");
+
+    // Allow either the poll's owner or any admin to edit
+    if (poll.createdBy !== userId && !(await isAdmin(userId))) {
+      return err("Access denied");
+    }
 
     if (parsed.data.title !== undefined) poll.title = parsed.data.title;
     if (parsed.data.description !== undefined)
@@ -151,12 +154,18 @@ export async function deletePoll(
 
     await connectToDatabase();
 
-    const poll = await Poll.findOneAndDelete({ _id: pollId, createdBy: userId });
-    if (!poll) return err("Poll not found or access denied");
+    const target = await Poll.findById(pollId);
+    if (!target) return err("Poll not found");
+    if (target.createdBy !== userId && !(await isAdmin(userId))) {
+      return err("Access denied");
+    }
+
+    const poll = await Poll.findByIdAndDelete(pollId);
+    if (!poll) return err("Poll not found");
 
     await Vote.deleteMany({ pollId: poll._id });
     await User.findOneAndUpdate(
-      { clerkId: userId },
+      { clerkId: poll.createdBy },
       { $inc: { pollsCreated: -1 } }
     );
 
@@ -229,12 +238,18 @@ export async function updatePollStatus(
 
     await connectToDatabase();
 
-    const poll = await Poll.findOneAndUpdate(
-      { _id: pollId, createdBy: userId },
+    const target = await Poll.findById(pollId);
+    if (!target) return err("Poll not found");
+    if (target.createdBy !== userId && !(await isAdmin(userId))) {
+      return err("Access denied");
+    }
+
+    const poll = await Poll.findByIdAndUpdate(
+      pollId,
       { status },
       { returnDocument: "after" }
     );
-    if (!poll) return err("Poll not found or access denied");
+    if (!poll) return err("Poll not found");
 
     revalidatePath("/admin/polls");
     revalidatePath(`/vote/${pollId}`);

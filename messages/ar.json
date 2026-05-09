@@ -20,7 +20,7 @@
     "copyright": "© {year} PollApp. جميع الحقوق محفوظة."
   },
   "vote": {
-    "title": "الأصوات النشطة",
+    "title": "التصويت النشطة",
     "available": "يوجد {count} استبان مفتوح",
     "availablePlural": "يوجد {count} استبيانات مفتوحة",
     "noneOpen": "لا توجد استبيانات مفتوحة حالياً",
