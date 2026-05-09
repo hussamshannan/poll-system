@@ -2,18 +2,17 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import confetti from "canvas-confetti";
 import { Check } from "lucide-react";
 
 const SELECTED_INDEX = 1;
 
 export function HeroVoteLoop() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const selectedPillRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!window.matchMedia("(min-width: 1280px)").matches) return;
 
     const ctx = gsap.context(() => {
       gsap.set(".pill", { y: 8 });
@@ -56,14 +55,7 @@ export function HeroVoteLoop() {
           "select+=0.15"
         );
 
-      // 4. Confetti at the selected pill
-      tl.call(
-        () => fireConfetti(selectedPillRef.current),
-        undefined,
-        "select+=0.4"
-      );
-
-      // 5. Wash pills
+      // 4. Wash pills
       tl.to(
         ".pill",
         {
@@ -73,10 +65,10 @@ export function HeroVoteLoop() {
           ease: "power2.in",
           stagger: 0.04,
         },
-        "+=0.6"
+        "+=0.8"
       );
 
-      // 6. Reset
+      // 5. Reset
       tl.set(".pill", { y: 8, scale: 1 })
         .set(".pill-dot-fill", { opacity: 0 })
         .set(".pill-check", { opacity: 0, scale: 0.5 });
@@ -95,7 +87,6 @@ export function HeroVoteLoop() {
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            ref={i === SELECTED_INDEX ? selectedPillRef : undefined}
             data-index={i}
             className="pill flex h-12 w-64 items-center gap-3 rounded-full border border-border bg-card/80 px-4 opacity-0 shadow-sm backdrop-blur-sm motion-reduce:opacity-100"
           >
@@ -112,28 +103,4 @@ export function HeroVoteLoop() {
       </div>
     </div>
   );
-}
-
-function fireConfetti(target: HTMLDivElement | null) {
-  if (!target) return;
-  const rect = target.getBoundingClientRect();
-  const x = (rect.left + rect.width / 2) / window.innerWidth;
-  const y = (rect.top + rect.height / 2) / window.innerHeight;
-
-  const cs = getComputedStyle(document.documentElement);
-  const colors = ["--primary", "--accent", "--ring"]
-    .map((v) => cs.getPropertyValue(v).trim())
-    .filter(Boolean);
-
-  void confetti({
-    particleCount: 50,
-    spread: 65,
-    startVelocity: 30,
-    gravity: 0.7,
-    scalar: 0.9,
-    ticks: 110,
-    origin: { x, y },
-    colors: colors.length > 0 ? colors : undefined,
-    disableForReducedMotion: true,
-  });
 }
