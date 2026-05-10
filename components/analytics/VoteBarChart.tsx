@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OptionVoteCount } from "@/lib/types/analytics.types";
 import { useChartColors } from "@/hooks/useChartColors";
+import { paletteColor } from "@/lib/utils/chart-palette";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 
@@ -79,7 +80,7 @@ export function VoteBarChart({ data }: VoteBarChartProps) {
               radius={[4, 4, 4, 4]}
             >
               {chartData.map((_, i) => (
-                <Cell key={i} fill={c.chart[i % c.chart.length]} />
+                <Cell key={i} fill={paletteColor(i)} />
               ))}
               <LabelList
                 dataKey="votes"

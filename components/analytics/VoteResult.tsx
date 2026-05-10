@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OptionVoteCount } from "@/lib/types/analytics.types";
 import { formatPercent } from "@/lib/utils/format";
-import { useChartColors } from "@/hooks/useChartColors";
+import { paletteColor } from "@/lib/utils/chart-palette";
 
 interface VoteResultProps {
   title: string;
@@ -12,7 +12,6 @@ interface VoteResultProps {
 }
 
 export function VoteResult({ title, totalVotes, optionBreakdown }: VoteResultProps) {
-  const c = useChartColors();
 
   return (
     <Card>
@@ -24,7 +23,7 @@ export function VoteResult({ title, totalVotes, optionBreakdown }: VoteResultPro
       </CardHeader>
       <CardContent className="space-y-4">
         {optionBreakdown.map((option, i) => {
-          const color = c.chart[i % c.chart.length];
+          const color = paletteColor(i);
           return (
             <div key={option.optionId} className="space-y-1">
               <div className="flex items-center justify-between gap-3 text-sm">

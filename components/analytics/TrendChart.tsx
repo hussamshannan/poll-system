@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VoteOverTime } from "@/lib/types/analytics.types";
 import { useChartColors } from "@/hooks/useChartColors";
+import { paletteColor } from "@/lib/utils/chart-palette";
 import { useTranslations } from "next-intl";
 
 interface TrendChartProps {
@@ -37,8 +38,8 @@ export function TrendChart({ data }: TrendChartProps) {
             <AreaChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={c.chart[1]} stopOpacity={0.45} />
-                  <stop offset="100%" stopColor={c.chart[1]} stopOpacity={0} />
+                  <stop offset="0%" stopColor={paletteColor(0)} stopOpacity={0.45} />
+                  <stop offset="100%" stopColor={paletteColor(0)} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={c.border} />
@@ -68,10 +69,10 @@ export function TrendChart({ data }: TrendChartProps) {
               <Area
                 type="monotone"
                 dataKey="count"
-                stroke={c.chart[1]}
+                stroke={paletteColor(0)}
                 strokeWidth={2}
                 fill="url(#trendFill)"
-                dot={{ r: 3, fill: c.chart[1] }}
+                dot={{ r: 3, fill: paletteColor(0) }}
                 activeDot={{ r: 5 }}
               />
             </AreaChart>

@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OptionVoteCount } from "@/lib/types/analytics.types";
 import { useChartColors } from "@/hooks/useChartColors";
+import { paletteColor } from "@/lib/utils/chart-palette";
 import { useTranslations } from "next-intl";
 
 interface VotePieChartProps {
@@ -40,7 +41,7 @@ export function VotePieChart({ data }: VotePieChartProps) {
               cy="50%"
               labelLine={false}
               outerRadius={100}
-              fill={c.chart[0]}
+              fill={paletteColor(0)}
               dataKey="value"
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               label={(props: any) => {
@@ -70,10 +71,7 @@ export function VotePieChart({ data }: VotePieChartProps) {
               }}
             >
               {chartData.map((_, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={c.chart[index % c.chart.length]}
-                />
+                <Cell key={`cell-${index}`} fill={paletteColor(index)} />
               ))}
             </Pie>
             <Tooltip
