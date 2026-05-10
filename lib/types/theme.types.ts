@@ -4,7 +4,8 @@ export type ThemeName =
   | "modern-minimal"
   | "nature"
   | "pastel-dreams"
-  | "amber";
+  | "amber"
+  | "coffee";
 
 export type ThemeMode = "light" | "dark";
 
@@ -82,6 +83,15 @@ export const THEMES: ThemeMeta[] = [
     preview: {
       light: { bg: "#ffffff", primary: "#f59e0b", accent: "#fffbeb" },
       dark: { bg: "#171717", primary: "#fbbf24", accent: "#92400e" },
+    },
+  },
+  {
+    id: "coffee",
+    name: "Coffee",
+    description: "Cozy brown + cream",
+    preview: {
+      light: { bg: "#f9f9f9", primary: "#644a40", accent: "#ffdfb5" },
+      dark: { bg: "#111111", primary: "#ffe0c2", accent: "#393028" },
     },
   },
 ];
