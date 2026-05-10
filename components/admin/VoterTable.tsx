@@ -1,17 +1,46 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { DataTable, Column } from "@/components/common/DataTable";
 import { VoterRecord } from "@/lib/types/admin.types";
 import { formatDate } from "@/lib/utils/format";
+import { getVotersForPoll } from "@/actions/admin.actions";
+
+const PAGE_SIZE = 10;
 
 interface VoterTableProps {
-  voters: VoterRecord[];
-  total: number;
+  pollId: string;
+  initialVoters: VoterRecord[];
+  initialTotal: number;
 }
 
-export function VoterTable({ voters, total }: VoterTableProps) {
+export function VoterTable({
+  pollId,
+  initialVoters,
+  initialTotal,
+}: VoterTableProps) {
   const t = useTranslations("voterTable");
+  const [voters, setVoters] = useState(initialVoters);
+  const [total, setTotal] = useState(initialTotal);
+  const [page, setPage] = useState(1);
+  const [isPending, startTransition] = useTransition();
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const goToPage = (next: number) => {
+    if (next < 1 || next > totalPages || next === page || isPending) return;
+    startTransition(async () => {
+      const res = await getVotersForPoll(pollId, next, PAGE_SIZE);
+      if (res.success) {
+        setVoters(res.data.voters);
+        setTotal(res.data.total);
+        setPage(next);
+      }
+    });
+  };
 
   const columns: Column<VoterRecord>[] = [
     {
@@ -55,13 +84,43 @@ export function VoterTable({ voters, total }: VoterTableProps) {
   ];
 
   return (
-    <DataTable
-      columns={columns}
-      data={voters}
-      keyExtractor={(v) => v._id}
-      title={t("tableTitle")}
-      total={total}
-      emptyMessage={t("empty")}
-    />
+    <div className="space-y-3">
+      <DataTable
+        columns={columns}
+        data={voters}
+        keyExtractor={(v) => v._id}
+        title={t("tableTitle")}
+        total={total}
+        emptyMessage={t("empty")}
+      />
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-muted-foreground">
+            {t("pageOf", { current: page, total: totalPages })}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 1 || isPending}
+            >
+              <ChevronLeft className="h-4 w-4" data-dir-flip />
+              {t("previous")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => goToPage(page + 1)}
+              disabled={page === totalPages || isPending}
+            >
+              {t("next")}
+              <ChevronRight className="h-4 w-4" data-dir-flip />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

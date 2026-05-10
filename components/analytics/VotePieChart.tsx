@@ -43,9 +43,31 @@ export function VotePieChart({ data }: VotePieChartProps) {
               fill={c.chart[0]}
               dataKey="value"
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              label={({ name, percent }: any) =>
-                `${name ?? ""} (${((Number(percent) || 0) * 100).toFixed(0)}%)`
-              }
+              label={(props: any) => {
+                const RADIAN = Math.PI / 180;
+                const radius =
+                  props.innerRadius +
+                  (props.outerRadius - props.innerRadius) * 0.5;
+                const x =
+                  props.cx + radius * Math.cos(-props.midAngle * RADIAN);
+                const y =
+                  props.cy + radius * Math.sin(-props.midAngle * RADIAN);
+                const percent = (Number(props.percent) || 0) * 100;
+                if (percent < 5) return null;
+                return (
+                  <text
+                    x={x}
+                    y={y}
+                    fill="#ffffff"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize={12}
+                    fontWeight={600}
+                  >
+                    {percent.toFixed(0)}%
+                  </text>
+                );
+              }}
             >
               {chartData.map((_, index) => (
                 <Cell

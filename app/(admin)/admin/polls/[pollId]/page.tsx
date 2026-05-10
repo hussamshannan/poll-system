@@ -16,7 +16,7 @@ export default async function AdminPollDetailPage({
   const [pollResult, analyticsResult, votersResult] = await Promise.all([
     getPollById(pollId),
     getPollAnalytics(pollId),
-    getVotersForPoll(pollId, 1, 100),
+    getVotersForPoll(pollId, 1, 10),
   ]);
 
   if (!pollResult.success) {

@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -34,12 +34,18 @@ export function TrendChart({ data }: TrendChartProps) {
           </p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={data}>
+            <AreaChart data={data} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={c.chart[1]} stopOpacity={0.45} />
+                  <stop offset="100%" stopColor={c.chart[1]} stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={c.border} />
               <XAxis
                 dataKey="date"
                 stroke={c.border}
-                tick={{ fill: c.mutedForeground }}
+                tick={{ fill: c.cardForeground, fontSize: 12 }}
                 tickFormatter={(val) => {
                   const d = new Date(val);
                   return `${d.getMonth() + 1}/${d.getDate()}`;
@@ -48,7 +54,8 @@ export function TrendChart({ data }: TrendChartProps) {
               <YAxis
                 allowDecimals={false}
                 stroke={c.border}
-                tick={{ fill: c.mutedForeground }}
+                width={32}
+                tick={{ fill: c.cardForeground, fontSize: 12 }}
               />
               <Tooltip
                 contentStyle={{
@@ -58,14 +65,16 @@ export function TrendChart({ data }: TrendChartProps) {
                   borderRadius: c.radius,
                 }}
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="count"
-                stroke={c.primary}
+                stroke={c.chart[1]}
                 strokeWidth={2}
-                dot={{ r: 4, fill: c.primary }}
+                fill="url(#trendFill)"
+                dot={{ r: 3, fill: c.chart[1] }}
+                activeDot={{ r: 5 }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </CardContent>

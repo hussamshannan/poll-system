@@ -88,7 +88,11 @@ export function PollDetailClient({
       <AnalyticsPanel analytics={analytics} />
 
       {/* Voter records */}
-      <VoterTable voters={voters} total={votersTotal} />
+      <VoterTable
+        pollId={pollId}
+        initialVoters={voters}
+        initialTotal={votersTotal}
+      />
 
       <ConfirmDialog
         open={resetOpen}

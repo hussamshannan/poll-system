@@ -130,7 +130,10 @@
     "colPhone": "الهاتف",
     "colVotedFor": "صوّت لصالح",
     "colVotedAt": "وقت التصويت",
-    "empty": "لم يتم تسجيل أي أصوات بعد."
+    "empty": "لم يتم تسجيل أي أصوات بعد.",
+    "previous": "السابق",
+    "next": "التالي",
+    "pageOf": "صفحة {current} من {total}"
   },
   "pollForm": {
     "createTitle": "إنشاء تصويت جديد",

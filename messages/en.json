@@ -130,7 +130,10 @@
     "colPhone": "Phone",
     "colVotedFor": "Voted For",
     "colVotedAt": "Voted At",
-    "empty": "No votes recorded yet."
+    "empty": "No votes recorded yet.",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {current} of {total}"
   },
   "pollForm": {
     "createTitle": "Create a New Poll",

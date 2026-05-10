@@ -3,6 +3,8 @@
 import {
   BarChart,
   Bar,
+  Cell,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -26,7 +28,7 @@ export function VoteBarChart({ data }: VoteBarChartProps) {
   const isRTL = locale === "ar";
 
   const chartData = data.map((d) => ({
-    name: d.text.length > 20 ? d.text.slice(0, 20) + "…" : d.text,
+    name: d.text.length > 24 ? d.text.slice(0, 24) + "…" : d.text,
     votes: d.count,
   }));
 
@@ -56,10 +58,11 @@ export function VoteBarChart({ data }: VoteBarChartProps) {
             <YAxis
               type="category"
               dataKey="name"
-              width={130}
+              width={160}
               orientation={isRTL ? "right" : "left"}
               stroke={c.border}
-              tick={{ fill: c.mutedForeground }}
+              tick={{ fill: c.cardForeground, fontSize: 12 }}
+              interval={0}
             />
             <Tooltip
               contentStyle={{
@@ -73,9 +76,20 @@ export function VoteBarChart({ data }: VoteBarChartProps) {
             <Bar
               dataKey="votes"
               name={t("votes")}
-              fill={c.primary}
               radius={[4, 4, 4, 4]}
-            />
+            >
+              {chartData.map((_, i) => (
+                <Cell key={i} fill={c.chart[i % c.chart.length]} />
+              ))}
+              <LabelList
+                dataKey="votes"
+                position={isRTL ? "insideLeft" : "insideRight"}
+                offset={8}
+                fill={c.cardForeground}
+                fontSize={12}
+                fontWeight={500}
+              />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </CardContent>
