@@ -230,14 +230,16 @@ export async function getSiteStats(): Promise<ActionResult<SiteStats>> {
 
 function buildSeries(
   raw: { _id: string; count: number }[],
-  startDate: Date,
+  endDate: Date,
   days: number
 ): { date: string; count: number }[] {
   const map = new Map(raw.map((r) => [r._id, r.count]));
   const out: { date: string; count: number }[] = [];
-  for (let i = 0; i < days; i++) {
-    const d = new Date(startDate);
-    d.setDate(startDate.getDate() + i);
+  // Build `days` chronological buckets ending at `endDate` (inclusive).
+  // i = days-1 → days-1 ago; i = 0 → today.
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(endDate);
+    d.setUTCDate(endDate.getUTCDate() - i);
     const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
     out.push({ date: key, count: map.get(key) ?? 0 });
   }
@@ -254,19 +256,19 @@ export async function getDashboardOverview(): Promise<
     await connectToDatabase();
 
     const now = new Date();
-    const thirtyDaysAgo = new Date(now);
-    thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
-    thirtyDaysAgo.setUTCHours(0, 0, 0, 0);
-
-    const fourteenDaysAgo = new Date(now);
-    fourteenDaysAgo.setUTCDate(fourteenDaysAgo.getUTCDate() - 14);
-    fourteenDaysAgo.setUTCHours(0, 0, 0, 0);
 
     const todayStart = new Date(now);
     todayStart.setUTCHours(0, 0, 0, 0);
 
     const yesterdayStart = new Date(todayStart);
     yesterdayStart.setUTCDate(todayStart.getUTCDate() - 1);
+
+    // Window of 30 buckets ending at today (today - 29 days .. today).
+    const windowStart = new Date(todayStart);
+    windowStart.setUTCDate(todayStart.getUTCDate() - 29);
+
+    const fourteenDaysAgo = new Date(todayStart);
+    fourteenDaysAgo.setUTCDate(todayStart.getUTCDate() - 14);
 
     const aggDailyVotes = (since: Date) =>
       Vote.aggregate<{ _id: string; count: number }>([
@@ -328,9 +330,9 @@ export async function getDashboardOverview(): Promise<
       recentPolls,
       recentVotes,
     ] = await Promise.all([
-      aggDailyVotes(thirtyDaysAgo),
-      aggDailyPolls(thirtyDaysAgo),
-      aggDailyUniqueVoters(thirtyDaysAgo),
+      aggDailyVotes(windowStart),
+      aggDailyPolls(windowStart),
+      aggDailyUniqueVoters(windowStart),
       Vote.countDocuments(),
       Vote.countDocuments({ votedAt: { $lt: fourteenDaysAgo } }),
       Poll.countDocuments({ status: "open" }),
@@ -343,7 +345,7 @@ export async function getDashboardOverview(): Promise<
         votedAt: { $gte: yesterdayStart, $lt: todayStart },
       }),
       Vote.aggregate<{ _id: { day: number; hour: number }; count: number }>([
-        { $match: { votedAt: { $gte: thirtyDaysAgo } } },
+        { $match: { votedAt: { $gte: windowStart } } },
         {
           $group: {
             _id: {
@@ -378,11 +380,11 @@ export async function getDashboardOverview(): Promise<
         .lean(),
     ]);
 
-    const series30Votes = buildSeries(votesDaily30, thirtyDaysAgo, 30);
-    const series30Polls = buildSeries(pollsDaily30, thirtyDaysAgo, 30);
+    const series30Votes = buildSeries(votesDaily30, todayStart, 30);
+    const series30Polls = buildSeries(pollsDaily30, todayStart, 30);
     const series30UniqueVoters = buildSeries(
       uniqueVotersDaily30,
-      thirtyDaysAgo,
+      todayStart,
       30
     );
 
