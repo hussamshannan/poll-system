@@ -6,6 +6,7 @@ import Poll from "@/lib/models/Poll.model";
 import Vote from "@/lib/models/Vote.model";
 import { ActionResult, ok, err } from "@/lib/types/action-result.types";
 import { CastVoteSchema, CheckVoteSchema } from "@/lib/validations/vote.schema";
+import { normalizePhone, normalizeName } from "@/lib/utils/phone";
 import mongoose from "mongoose";
 
 export async function castVote(
@@ -38,13 +39,22 @@ export async function castVote(
       }
     }
 
+    const normalizedPhone = normalizePhone(parsed.data.voterPhone);
+    if (!normalizedPhone) {
+      return err("Phone number must contain 7–15 digits");
+    }
+    const normalizedName = normalizeName(parsed.data.voterName);
+    if (!normalizedName) {
+      return err("Name is required");
+    }
+
     const vote = await Vote.create({
       pollId: poll._id,
       optionIds: parsed.data.optionIds.map(
         (id) => new mongoose.Types.ObjectId(id)
       ),
-      voterName: parsed.data.voterName,
-      voterPhone: parsed.data.voterPhone,
+      voterName: normalizedName,
+      voterPhone: normalizedPhone,
     });
 
     await Poll.findByIdAndUpdate(poll._id, { $inc: { totalVotes: 1 } });
@@ -92,10 +102,13 @@ export async function getVoteByPhone(
     const parsed = CheckVoteSchema.safeParse({ pollId, voterPhone: phone });
     if (!parsed.success) return ok(null);
 
+    const normalizedPhone = normalizePhone(parsed.data.voterPhone);
+    if (!normalizedPhone) return ok(null);
+
     await connectToDatabase();
     const vote = await Vote.findOne({
       pollId: parsed.data.pollId,
-      voterPhone: parsed.data.voterPhone,
+      voterPhone: normalizedPhone,
     }).lean();
 
     if (!vote) return ok(null);

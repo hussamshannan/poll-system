@@ -25,6 +25,7 @@ const VoteSchema = new Schema<IVote>(
 );
 
 VoteSchema.index({ pollId: 1, voterPhone: 1 }, { unique: true });
+VoteSchema.index({ pollId: 1, voterName: 1 }, { unique: true });
 VoteSchema.index({ pollId: 1, votedAt: 1 });
 
 // In development, clear cached model so schema changes take effect on hot reload

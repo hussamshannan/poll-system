@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
+import { VoterDataMaintenanceCard } from "@/components/admin/VoterDataMaintenanceCard";
 import { getSiteTheme } from "@/actions/theme.actions";
 import { DEFAULT_THEME } from "@/lib/types/theme.types";
 
@@ -15,6 +16,7 @@ export default async function AdminSettingsPage() {
     <div className="space-y-6">
       <PageHeader title={t("settingsTitle")} description={t("settingsDesc")} />
       <ThemeEditor initialTheme={theme} />
+      <VoterDataMaintenanceCard />
     </div>
   );
 }

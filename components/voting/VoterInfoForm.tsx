@@ -48,6 +48,7 @@ export function VoterInfoForm({
           dir="ltr"
           disabled={disabled}
         />
+        <p className="text-xs text-muted-foreground">{t("phoneHint")}</p>
         {errors?.phone && (
           <p className="text-sm text-destructive">{errors.phone}</p>
         )}

@@ -34,12 +34,5 @@ export async function connectToDatabase() {
   }
 
   cached.conn = await cached.promise;
-
-  // One-time migration: drop obsolete voterName unique index if it still exists
-  await cached.conn.connection.db
-    ?.collection("votes")
-    .dropIndex("pollId_1_voterName_1")
-    .catch(() => { /* index already absent — ignore */ });
-
   return cached.conn;
 }

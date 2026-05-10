@@ -17,8 +17,125 @@ import {
   DashboardOverview,
 } from "@/lib/types/admin.types";
 import { requireAdmin } from "@/lib/utils/admin.utils";
+import { normalizePhone, normalizeName } from "@/lib/utils/phone";
 
 const MASTER_ADMIN_EMAIL = "hussamshannan5@gmail.com";
+
+export interface NormalizeVoterDataResult {
+  scanned: number;
+  phonesNormalized: number;
+  namesNormalized: number;
+  duplicatesRemoved: number;
+  pollsAffected: number;
+}
+
+export async function normalizeVoterData(): Promise<
+  ActionResult<NormalizeVoterDataResult>
+> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  try {
+    await connectToDatabase();
+
+    const votes = await Vote.find({})
+      .sort({ pollId: 1, votedAt: 1 })
+      .select("_id pollId voterName voterPhone")
+      .lean();
+
+    const seenPerPoll = new Map<
+      string,
+      { phones: Set<string>; names: Set<string> }
+    >();
+
+    const updates: { id: import("mongoose").Types.ObjectId; voterName: string; voterPhone: string }[] = [];
+    const dupIds: import("mongoose").Types.ObjectId[] = [];
+    const pollsTouched = new Set<string>();
+
+    let phonesNormalized = 0;
+    let namesNormalized = 0;
+
+    for (const v of votes) {
+      const pollKey = v.pollId.toString();
+      const seen =
+        seenPerPoll.get(pollKey) ??
+        { phones: new Set<string>(), names: new Set<string>() };
+      seenPerPoll.set(pollKey, seen);
+
+      const np = normalizePhone(v.voterPhone);
+      const nn = normalizeName(v.voterName);
+
+      // Invalid phone after normalization → drop the row
+      if (!np || !nn) {
+        dupIds.push(v._id);
+        pollsTouched.add(pollKey);
+        continue;
+      }
+
+      // Phone or name collides with an earlier vote in the same poll → drop
+      if (seen.phones.has(np) || seen.names.has(nn)) {
+        dupIds.push(v._id);
+        pollsTouched.add(pollKey);
+        continue;
+      }
+
+      seen.phones.add(np);
+      seen.names.add(nn);
+
+      const phoneChanged = np !== v.voterPhone;
+      const nameChanged = nn !== v.voterName;
+      if (phoneChanged) phonesNormalized++;
+      if (nameChanged) namesNormalized++;
+      if (phoneChanged || nameChanged) {
+        updates.push({ id: v._id, voterName: nn, voterPhone: np });
+      }
+    }
+
+    // Apply normalized values to kept votes (batched).
+    if (updates.length > 0) {
+      await Vote.bulkWrite(
+        updates.map((u) => ({
+          updateOne: {
+            filter: { _id: u.id },
+            update: { $set: { voterName: u.voterName, voterPhone: u.voterPhone } },
+          },
+        }))
+      );
+    }
+
+    // Drop the duplicates / invalid rows.
+    if (dupIds.length > 0) {
+      await Vote.deleteMany({ _id: { $in: dupIds } });
+    }
+
+    // Recompute Poll.totalVotes only for polls that lost votes.
+    for (const pollKey of pollsTouched) {
+      const remaining = await Vote.countDocuments({ pollId: pollKey });
+      await Poll.findByIdAndUpdate(pollKey, { $set: { totalVotes: remaining } });
+    }
+
+    // Now that the data is clean, ensure both unique indexes exist.
+    // syncIndexes drops any indexes the schema no longer declares and
+    // creates any missing ones (including the re-added voterName index).
+    try {
+      await Vote.syncIndexes();
+    } catch (e) {
+      console.error("normalizeVoterData: syncIndexes failed:", e);
+      // Cleanup itself succeeded — surface the partial-success counts anyway.
+    }
+
+    return ok({
+      scanned: votes.length,
+      phonesNormalized,
+      namesNormalized,
+      duplicatesRemoved: dupIds.length,
+      pollsAffected: pollsTouched.size,
+    });
+  } catch (error) {
+    console.error("normalizeVoterData error:", error);
+    return err("Failed to normalize voter data");
+  }
+}
 
 export async function adminDeletePoll(
   pollId: string

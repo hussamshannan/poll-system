@@ -68,6 +68,13 @@
     "resetVotesDesc": "This will permanently delete all {count} votes for this poll and reset the count to zero. The poll itself will remain. This cannot be undone.",
     "resetVotesSuccess": "All votes have been reset.",
     "resetVotesError": "Failed to reset votes. Please try again.",
+    "maintenanceTitle": "Voter Data Maintenance",
+    "maintenanceDesc": "Normalize all phone numbers (start with +), de-duplicate votes by phone or name within each poll, and re-enable strict uniqueness.",
+    "maintenanceBtn": "Run Cleanup",
+    "maintenanceConfirmTitle": "Run voter data cleanup?",
+    "maintenanceConfirmDesc": "This will rewrite phone numbers and remove duplicate votes that share a phone or name within the same poll. Earliest vote per voter is kept. This cannot be undone.",
+    "maintenanceSuccess": "{phones} phones normalized · {names} names normalized · {dupes} duplicate votes removed across {polls} polls.",
+    "maintenanceError": "Cleanup failed. Try again.",
     "settingsTitle": "Settings",
     "settingsDesc": "Choose a theme and appearance for the entire site",
     "adminsTitle": "Admin Management",
@@ -151,7 +158,8 @@
     "nameLabel": "Your Name",
     "namePlaceholder": "Enter your full name",
     "phoneLabel": "Phone Number",
-    "phonePlaceholder": "+966501234567"
+    "phonePlaceholder": "+966501234567",
+    "phoneHint": "Saved in international format (always starting with +)."
   },
   "theme": {
     "chooseTitle": "Choose Theme",
