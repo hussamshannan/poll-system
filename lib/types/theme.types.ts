@@ -3,7 +3,8 @@ export type ThemeName =
   | "violet-bloom"
   | "modern-minimal"
   | "nature"
-  | "pastel-dreams";
+  | "pastel-dreams"
+  | "amber";
 
 export type ThemeMode = "light" | "dark";
 
@@ -72,6 +73,15 @@ export const THEMES: ThemeMeta[] = [
     preview: {
       light: { bg: "#f8eaf7", primary: "#9067d8", accent: "#e9d4f8" },
       dark: { bg: "#21160d", primary: "#b08ae0", accent: "#3a2a50" },
+    },
+  },
+  {
+    id: "amber",
+    name: "Amber",
+    description: "Warm gold",
+    preview: {
+      light: { bg: "#ffffff", primary: "#f59e0b", accent: "#fffbeb" },
+      dark: { bg: "#171717", primary: "#fbbf24", accent: "#92400e" },
     },
   },
 ];
