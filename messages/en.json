@@ -140,6 +140,12 @@
   "pollForm": {
     "createTitle": "Create a New Poll",
     "editTitle": "Edit Poll",
+    "basicsTitle": "Basics",
+    "basicsDesc": "Title and description voters will see",
+    "optionsTitle": "Options",
+    "optionsDesc": "Voters will pick from this list",
+    "rulesTitle": "Voting rules",
+    "scheduleTitle": "Schedule",
     "titleLabel": "Title",
     "titlePlaceholder": "What would you like to ask?",
     "descLabel": "Description (optional)",
@@ -147,6 +153,7 @@
     "choicesLabel": "Choices per voter",
     "choicesHelp": "Each voter must select exactly this many options. Use 1 for single-choice.",
     "anonymous": "Anonymous voting",
+    "anonymousHelp": "Hide voter names in public results.",
     "releaseLabel": "Release Date (optional)",
     "releaseHelp": "Leave blank to make the poll immediately visible. Set a future date to schedule it.",
     "expiry": "Expiration (optional)",
@@ -158,7 +165,8 @@
   "optionEditor": {
     "label": "Options",
     "placeholder": "Option {n}",
-    "addOption": "Add Option"
+    "addOption": "Add Option",
+    "hint": "{current} of up to {max} options"
   },
   "voterForm": {
     "nameLabel": "Your Name",

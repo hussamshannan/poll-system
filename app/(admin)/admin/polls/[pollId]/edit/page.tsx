@@ -20,7 +20,7 @@ export default async function EditPollPage({ params }: EditPollPageProps) {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-5xl">
       <PageHeader title={t("editPollTitle")} description={t("editPollDesc")} />
       <EditPollClient poll={result.data} />
     </div>
