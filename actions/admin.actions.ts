@@ -188,6 +188,45 @@ export async function resetPollVotes(
   }
 }
 
+export async function deleteVotes(
+  pollId: string,
+  voteIds: string[]
+): Promise<ActionResult<{ deletedCount: number }>> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  if (!Array.isArray(voteIds) || voteIds.length === 0) {
+    return err("No votes selected");
+  }
+
+  try {
+    await connectToDatabase();
+
+    const poll = await Poll.findById(pollId);
+    if (!poll) return err("Poll not found");
+
+    const result = await Vote.deleteMany({
+      _id: { $in: voteIds },
+      pollId: poll._id,
+    });
+
+    if (result.deletedCount > 0) {
+      await Poll.findByIdAndUpdate(pollId, {
+        $inc: { totalVotes: -result.deletedCount },
+      });
+    }
+
+    revalidatePath("/admin/polls");
+    revalidatePath(`/admin/polls/${pollId}`);
+    revalidatePath(`/vote/${pollId}`);
+
+    return ok({ deletedCount: result.deletedCount });
+  } catch (error) {
+    console.error("deleteVotes error:", error);
+    return err("Failed to delete votes");
+  }
+}
+
 export async function getSiteStats(): Promise<ActionResult<SiteStats>> {
   const adminErr = await requireAdmin();
   if (adminErr) return adminErr;
@@ -534,7 +573,8 @@ export async function listAllUsers(
 export async function getVotersForPoll(
   pollId: string,
   page: number = 1,
-  limit: number = 50
+  limit: number = 50,
+  search: string = ""
 ): Promise<ActionResult<{ voters: VoterRecord[]; total: number }>> {
   const adminErr = await requireAdmin();
   if (adminErr) return adminErr;
@@ -549,14 +589,22 @@ export async function getVotersForPoll(
       poll.options.map((o) => [o._id.toString(), o.text])
     );
 
+    const filter: Record<string, unknown> = { pollId };
+    const trimmed = search.trim();
+    if (trimmed) {
+      const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const rx = new RegExp(escaped, "i");
+      filter.$or = [{ voterName: rx }, { voterPhone: rx }];
+    }
+
     const skip = (page - 1) * limit;
     const [votes, total] = await Promise.all([
-      Vote.find({ pollId })
+      Vote.find(filter)
         .sort({ votedAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Vote.countDocuments({ pollId }),
+      Vote.countDocuments(filter),
     ]);
 
     const voters: VoterRecord[] = votes.map((v) => ({

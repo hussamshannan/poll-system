@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { ActionResult } from "@/lib/types/action-result.types";
+import { markVotedLocally } from "@/lib/utils/local-vote-tracker";
 
 interface CastVoteInput {
   pollId: string;
@@ -30,6 +31,7 @@ export function useVote({ castVoteAction }: UseVoteOptions) {
     startTransition(async () => {
       const result = await castVoteAction(input);
       if (result.success) {
+        markVotedLocally(input.pollId);
         setIsSubmitted(true);
       } else {
         setError(result.error);

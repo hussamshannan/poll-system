@@ -46,7 +46,10 @@
     "selectOne": "Select one option",
     "selectMany": "Select one or more options",
     "selectExactly": "Select exactly {count} options",
-    "selectedOf": "{selected} of {required} selected"
+    "selectedOf": "{selected} of {required} selected",
+    "alreadyVotedTitle": "You've already voted",
+    "alreadyVotedDesc": "Our records show you submitted a vote for this poll from this device. Thank you for participating.",
+    "viewOtherPolls": "View other polls"
   },
   "confirmation": {
     "title": "Thank you, {name}!",
@@ -144,7 +147,18 @@
     "empty": "No votes recorded yet.",
     "previous": "Previous",
     "next": "Next",
-    "pageOf": "Page {current} of {total}"
+    "pageOf": "Page {current} of {total}",
+    "selectAll": "Select all on this page",
+    "selectRow": "Select voter",
+    "selectedCount": "{count} selected",
+    "clear": "Clear",
+    "deleteSelected": "Delete selected",
+    "deleteConfirmTitle": "Delete voters",
+    "deleteConfirmDesc": "This will permanently delete {count} vote(s). This cannot be undone.",
+    "deleteError": "Failed to delete voters. Please try again.",
+    "searchPlaceholder": "Search by name or phone...",
+    "noMatches": "No voters match your search.",
+    "clearSearch": "Clear search"
   },
   "pollForm": {
     "createTitle": "Create a New Poll",

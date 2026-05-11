@@ -46,7 +46,10 @@
     "selectOne": "اختر خياراً واحداً",
     "selectMany": "اختر خياراً أو أكثر",
     "selectExactly": "اختر {count} خيارات فقط",
-    "selectedOf": "تم اختيار {selected} من {required}"
+    "selectedOf": "تم اختيار {selected} من {required}",
+    "alreadyVotedTitle": "لقد صوّت بالفعل",
+    "alreadyVotedDesc": "سجّلت صوتك في هذا التصويت من هذا الجهاز. شكراً لمشاركتك.",
+    "viewOtherPolls": "تصفّح التصويتات الأخرى"
   },
   "confirmation": {
     "title": "شكراً لك، {name}!",
@@ -144,7 +147,18 @@
     "empty": "لم يتم تسجيل أي أصوات بعد.",
     "previous": "السابق",
     "next": "التالي",
-    "pageOf": "صفحة {current} من {total}"
+    "pageOf": "صفحة {current} من {total}",
+    "selectAll": "تحديد كل ما في هذه الصفحة",
+    "selectRow": "تحديد المصوّت",
+    "selectedCount": "تم تحديد {count}",
+    "clear": "إلغاء التحديد",
+    "deleteSelected": "حذف المحدد",
+    "deleteConfirmTitle": "حذف المصوّتين",
+    "deleteConfirmDesc": "سيؤدي هذا إلى حذف {count} صوتاً بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.",
+    "deleteError": "فشل حذف المصوّتين. يرجى المحاولة مجدداً.",
+    "searchPlaceholder": "ابحث بالاسم أو رقم الهاتف...",
+    "noMatches": "لا يوجد مصوّت يطابق بحثك.",
+    "clearSearch": "مسح البحث"
   },
   "pollForm": {
     "createTitle": "إنشاء تصويت جديد",
