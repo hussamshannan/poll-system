@@ -10,6 +10,7 @@ import { DataTable, Column } from "@/components/common/DataTable";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { AdminPoll } from "@/lib/types/admin.types";
 import { formatDate } from "@/lib/utils/format";
+import { isPollReleased } from "@/lib/utils/poll.utils";
 import { routes } from "@/lib/config/routes";
 
 interface PollTableProps {
@@ -44,7 +45,14 @@ export function PollTable({ polls: initialPolls, total, onDelete }: PollTablePro
     {
       key: "status",
       header: t("colStatus"),
-      render: (poll) => <StatusBadge status={poll.status} />,
+      render: (poll) => {
+        const effectiveStatus = poll.isExpired
+          ? "expired"
+          : !isPollReleased(poll)
+          ? "scheduled"
+          : poll.status;
+        return <StatusBadge status={effectiveStatus} />;
+      },
     },
     {
       key: "votes",

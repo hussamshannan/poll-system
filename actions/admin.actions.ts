@@ -396,12 +396,41 @@ export async function getDashboardOverview(): Promise<
         },
       ]),
       Poll.aggregate<{ _id: string; count: number }>([
-        { $group: { _id: "$status", count: { $sum: 1 } } },
+        {
+          $addFields: {
+            effectiveStatus: {
+              $switch: {
+                branches: [
+                  {
+                    case: {
+                      $and: [
+                        { $ne: ["$expiresAt", null] },
+                        { $lt: ["$expiresAt", now] },
+                      ],
+                    },
+                    then: "expired",
+                  },
+                  {
+                    case: {
+                      $and: [
+                        { $ne: ["$releaseAt", null] },
+                        { $gt: ["$releaseAt", now] },
+                      ],
+                    },
+                    then: "scheduled",
+                  },
+                ],
+                default: "$status",
+              },
+            },
+          },
+        },
+        { $group: { _id: "$effectiveStatus", count: { $sum: 1 } } },
       ]),
       Poll.find()
         .sort({ totalVotes: -1 })
         .limit(5)
-        .select("_id title totalVotes status")
+        .select("_id title totalVotes status expiresAt releaseAt")
         .lean(),
       Poll.find()
         .sort({ createdAt: -1 })
@@ -461,7 +490,12 @@ export async function getDashboardOverview(): Promise<
         count: h.count,
       })),
       statusBreakdown: statusBreakdownRaw.map((s) => ({
-        status: s._id as "draft" | "open" | "closed",
+        status: s._id as
+          | "draft"
+          | "open"
+          | "closed"
+          | "expired"
+          | "scheduled",
         count: s.count,
       })),
       topPolls: topPollsRaw.map((p) => ({
@@ -469,6 +503,9 @@ export async function getDashboardOverview(): Promise<
         title: p.title,
         totalVotes: p.totalVotes ?? 0,
         status: p.status as "draft" | "open" | "closed",
+        expiresAt: p.expiresAt ? p.expiresAt.toISOString() : null,
+        releaseAt: p.releaseAt ? p.releaseAt.toISOString() : null,
+        isExpired: p.expiresAt ? p.expiresAt.getTime() < now.getTime() : false,
       })),
       recentActivity: [
         ...recentPolls.map((p) => ({
@@ -517,6 +554,7 @@ export async function listAllPolls(
     const users = await User.find({ clerkId: { $in: creatorIds } }).lean();
     const userMap = new Map(users.map((u) => [u.clerkId, u.email]));
 
+    const now = Date.now();
     const adminPolls: AdminPoll[] = polls.map((p) => ({
       _id: p._id.toString(),
       title: p.title,
@@ -526,6 +564,8 @@ export async function listAllPolls(
       creatorEmail: userMap.get(p.createdBy) || "Unknown",
       createdAt: p.createdAt.toISOString(),
       expiresAt: p.expiresAt ? p.expiresAt.toISOString() : null,
+      releaseAt: p.releaseAt ? p.releaseAt.toISOString() : null,
+      isExpired: p.expiresAt ? new Date(p.expiresAt).getTime() < now : false,
     }));
 
     return ok({ polls: adminPolls, total });

@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { DashboardOverview } from "@/lib/types/admin.types";
 import { routes } from "@/lib/config/routes";
 import { formatNumber } from "@/lib/utils/format";
+import { isPollReleased } from "@/lib/utils/poll.utils";
 
 interface TopPollsPanelProps {
   polls: DashboardOverview["topPolls"];
@@ -29,8 +29,14 @@ export function TopPollsPanel({ polls }: TopPollsPanelProps) {
           <p className="text-sm text-muted-foreground">{t("noChartData")}</p>
         ) : (
           <ul className="space-y-3">
-            {polls.map((poll) => {
+            {polls.map((poll, index) => {
               const pct = max > 0 ? (poll.totalVotes / max) * 100 : 0;
+              const effectiveStatus = poll.isExpired
+                ? "expired"
+                : !isPollReleased(poll)
+                ? "scheduled"
+                : poll.status;
+              const barColor = `var(--chart-${(index % 5) + 1})`;
               return (
                 <li key={poll._id}>
                   <Link
@@ -42,13 +48,21 @@ export function TopPollsPanel({ polls }: TopPollsPanelProps) {
                         <span className="truncate font-medium">
                           {poll.title}
                         </span>
-                        <StatusBadge status={poll.status} />
+                        <StatusBadge status={effectiveStatus} />
                       </div>
                       <span className="shrink-0 text-sm font-mono tabular-nums text-muted-foreground">
                         {formatNumber(poll.totalVotes)} {tCard("votes")}
                       </span>
                     </div>
-                    <Progress value={pct} className="h-1.5" />
+                    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full transition-all"
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor: barColor,
+                        }}
+                      />
+                    </div>
                   </Link>
                 </li>
               );

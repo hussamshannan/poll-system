@@ -21,19 +21,29 @@ export function StatusDonut({ data }: StatusDonutProps) {
   const tStatus = useTranslations("status");
 
   const statusData = useMemo(() => {
-    const desired: ("open" | "closed" | "draft")[] = ["open", "closed", "draft"];
-    return desired.map((status) => ({
-      status,
-      count: data.find((s) => s.status === status)?.count ?? 0,
-    }));
+    const desired: ("open" | "scheduled" | "closed" | "expired" | "draft")[] = [
+      "open",
+      "scheduled",
+      "closed",
+      "expired",
+      "draft",
+    ];
+    return desired
+      .map((status) => ({
+        status,
+        count: data.find((s) => s.status === status)?.count ?? 0,
+      }))
+      .filter((entry) => entry.count > 0);
   }, [data]);
 
   const total = statusData.reduce((acc, p) => acc + p.count, 0);
 
   const chartConfig = {
     open: { label: tStatus("open"), color: "var(--chart-1)" },
-    closed: { label: tStatus("closed"), color: "var(--chart-2)" },
-    draft: { label: tStatus("draft"), color: "var(--chart-3)" },
+    scheduled: { label: tStatus("scheduled"), color: "var(--chart-2)" },
+    closed: { label: tStatus("closed"), color: "var(--chart-3)" },
+    expired: { label: tStatus("expired"), color: "var(--chart-4)" },
+    draft: { label: tStatus("draft"), color: "var(--chart-5)" },
   } satisfies ChartConfig;
 
   return (

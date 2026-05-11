@@ -16,6 +16,8 @@ export interface AdminPoll {
   creatorEmail: string;
   createdAt: string;
   expiresAt: string | null;
+  releaseAt: string | null;
+  isExpired: boolean;
 }
 
 export interface AdminUser {
@@ -74,12 +76,18 @@ export interface DashboardOverview {
     uniqueVoters: { date: string; count: number }[];
   };
   heatmap: { day: number; hour: number; count: number }[];
-  statusBreakdown: { status: "draft" | "open" | "closed"; count: number }[];
+  statusBreakdown: {
+    status: "draft" | "open" | "closed" | "expired" | "scheduled";
+    count: number;
+  }[];
   topPolls: {
     _id: string;
     title: string;
     totalVotes: number;
     status: "draft" | "open" | "closed";
+    expiresAt: string | null;
+    releaseAt: string | null;
+    isExpired: boolean;
   }[];
   recentActivity: ActivityEvent[];
 }
