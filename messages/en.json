@@ -21,12 +21,21 @@
   },
   "vote": {
     "title": "Active Polls",
+    "subtitle": "Cast your voice in the decisions that matter",
     "available": "{count} open poll available",
     "availablePlural": "{count} open polls available",
     "noneOpen": "No polls are currently open",
     "noActivePolls": "No active polls",
     "noActivePollsDesc": "There are no open polls right now. Check back later.",
-    "votes": "votes"
+    "votes": "votes",
+    "statOpenPolls": "open",
+    "statTotalVotes": "votes cast",
+    "chooseOne": "Single choice",
+    "chooseN": "Pick {count}",
+    "optionsCount": "{count} options",
+    "noDeadline": "Open-ended",
+    "closes": "Closes {when}",
+    "cardCta": "Vote now"
   },
   "votePage": {
     "expired": "This poll has expired and is no longer accepting votes.",

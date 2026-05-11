@@ -1,6 +1,6 @@
 {
   "nav": {
-    "polls": "الأصوات",
+    "polls": "التصويت",
     "admin": "الإدارة",
     "signIn": "دخول المسؤول",
     "langSwitch": "English"
@@ -20,13 +20,22 @@
     "copyright": "© {year} PollApp. جميع الحقوق محفوظة."
   },
   "vote": {
-    "title": "التصويت النشطة",
+    "title": "التصويتات النشطة",
+    "subtitle": "أدلِ بصوتك في القرارات المهمة",
     "available": "يوجد {count} تصويت مفتوح",
     "availablePlural": "يوجد {count} تصويتات مفتوحة",
     "noneOpen": "لا توجد تصويتات مفتوحة حالياً",
     "noActivePolls": "لا توجد تصويتات نشطة",
     "noActivePollsDesc": "لا توجد تصويتات مفتوحة الآن. تفقد لاحقاً.",
-    "votes": "صوت"
+    "votes": "صوت",
+    "statOpenPolls": "مفتوحة",
+    "statTotalVotes": "صوت مدلى به",
+    "chooseOne": "اختيار واحد",
+    "chooseN": "اختر {count}",
+    "optionsCount": "{count} خيارات",
+    "noDeadline": "مفتوح بلا موعد",
+    "closes": "ينتهي {when}",
+    "cardCta": "صوّت الآن"
   },
   "votePage": {
     "expired": "انتهت مدة هذا التصويت ولم يعد يقبل التصويت.",
@@ -36,7 +45,7 @@
     "submitting": "جار الإرسال...",
     "selectOne": "اختر خياراً واحداً",
     "selectMany": "اختر خياراً أو أكثر",
-    "selectExactly": "اختر {count} خيارات بالضبط",
+    "selectExactly": "اختر {count} خيارات فقط",
     "selectedOf": "تم اختيار {selected} من {required}"
   },
   "confirmation": {
