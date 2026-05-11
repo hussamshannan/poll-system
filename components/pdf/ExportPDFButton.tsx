@@ -5,16 +5,16 @@ import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import { PollAnalytics } from "@/lib/types/analytics.types";
-import { VoterRecord } from "@/lib/types/admin.types";
+import { getVotersForPoll } from "@/actions/admin.actions";
 import type { PDFTranslations } from "./AnalyticsPDFDocument";
 
 interface ExportPDFButtonProps {
   analytics: PollAnalytics;
   pollTitle: string;
-  voters: VoterRecord[];
+  pollId: string;
 }
 
-export function ExportPDFButton({ analytics, pollTitle, voters }: ExportPDFButtonProps) {
+export function ExportPDFButton({ analytics, pollTitle, pollId }: ExportPDFButtonProps) {
   const t      = useTranslations("pdf");
   const locale = useLocale();
 
@@ -26,6 +26,16 @@ export function ExportPDFButton({ analytics, pollTitle, voters }: ExportPDFButto
     setExportError(null);
 
     try {
+      // Fetch ALL voters for this poll at export time — the page only
+      // loaded 10 for the paginated table, but the PDF must be complete.
+      const votersResult = await getVotersForPoll(pollId, 1, 10000);
+      if (!votersResult.success) {
+        setExportError(t("error"));
+        setExporting(false);
+        return;
+      }
+      const allVoters = votersResult.data.voters;
+
       const [{ pdf }, { AnalyticsPDFDocument }] = await Promise.all([
         import("@react-pdf/renderer"),
         import("./AnalyticsPDFDocument"),
@@ -59,7 +69,7 @@ export function ExportPDFButton({ analytics, pollTitle, voters }: ExportPDFButto
           analytics={analytics}
           locale={locale}
           translations={translations}
-          voters={voters ?? []}
+          voters={allVoters}
         />
       ).toBlob();
 

@@ -70,7 +70,7 @@ export function PollDetailClient({
           </div>
         </div>
         <div className="flex items-center gap-2 sm:shrink-0">
-          <ExportPDFButton analytics={analytics} pollTitle={pollTitle} voters={voters} />
+          <ExportPDFButton analytics={analytics} pollTitle={pollTitle} pollId={pollId} />
           <Button variant="outline" onClick={() => setResetOpen(true)}>
             <RotateCcw className="me-2 h-4 w-4" />
             {t("resetVotesBtn")}
