@@ -35,10 +35,12 @@ export function VoteSubmit({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleToggle = (id: string) => {
-    if (poll.allowMultipleVotes) {
-      setSelectedIds((prev) =>
-        prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-      );
+    if (poll.choicesPerVoter > 1) {
+      setSelectedIds((prev) => {
+        if (prev.includes(id)) return prev.filter((x) => x !== id);
+        if (prev.length >= poll.choicesPerVoter) return prev; // at cap
+        return [...prev, id];
+      });
     } else {
       setSelectedIds([id]);
     }
@@ -87,7 +89,7 @@ export function VoteSubmit({
             options={poll.options}
             selectedIds={selectedIds}
             onToggle={handleToggle}
-            allowMultiple={poll.allowMultipleVotes}
+            choicesPerVoter={poll.choicesPerVoter}
             disabled={isPending}
           />
 
@@ -99,7 +101,9 @@ export function VoteSubmit({
 
           <Button
             type="submit"
-            disabled={isPending || selectedIds.length === 0}
+            disabled={
+              isPending || selectedIds.length !== poll.choicesPerVoter
+            }
             className="w-full"
           >
             {isPending ? t("submitting") : t("submit")}

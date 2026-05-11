@@ -21,6 +21,16 @@ export function isPollVotable(poll: { status: string; expiresAt: string | Date |
 
 export function serializePoll(poll: IPoll): Poll {
   const obj = poll.toObject();
+  // Back-compat derivation: old documents (pre-feature) have no
+  // choicesPerVoter. Derive from the legacy allowMultipleVotes flag so the
+  // voter UI keeps working without a DB migration.
+  const choicesPerVoter =
+    typeof obj.choicesPerVoter === "number" && obj.choicesPerVoter > 0
+      ? obj.choicesPerVoter
+      : obj.allowMultipleVotes
+        ? obj.options.length
+        : 1;
+
   return {
     _id: obj._id.toString(),
     title: obj.title,
@@ -32,6 +42,7 @@ export function serializePoll(poll: IPoll): Poll {
     })),
     status: obj.status,
     allowMultipleVotes: obj.allowMultipleVotes,
+    choicesPerVoter,
     isAnonymous: obj.isAnonymous,
     expiresAt: obj.expiresAt ? obj.expiresAt.toISOString() : null,
     releaseAt: obj.releaseAt ? obj.releaseAt.toISOString() : null,

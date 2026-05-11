@@ -39,7 +39,7 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
         { text: "" },
         { text: "" },
       ],
-      allowMultipleVotes: poll?.allowMultipleVotes || false,
+      choicesPerVoter: poll?.choicesPerVoter ?? 1,
       isAnonymous: poll?.isAnonymous || false,
       expiresAt: poll?.expiresAt ? poll.expiresAt.slice(0, 16) : null,
       releaseAt: poll?.releaseAt ? poll.releaseAt.slice(0, 16) : null,
@@ -104,13 +104,22 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
             }
           />
 
-          <div className="flex items-center gap-3">
-            <Switch
-              id="allowMultipleVotes"
-              checked={form.watch("allowMultipleVotes")}
-              onCheckedChange={(val) => form.setValue("allowMultipleVotes", val)}
+          <div className="space-y-2">
+            <Label htmlFor="choicesPerVoter">{t("choicesLabel")}</Label>
+            <Input
+              id="choicesPerVoter"
+              type="number"
+              min={1}
+              max={10}
+              step={1}
+              {...form.register("choicesPerVoter", { valueAsNumber: true })}
             />
-            <Label htmlFor="allowMultipleVotes">{t("multipleVotes")}</Label>
+            <p className="text-xs text-muted-foreground">{t("choicesHelp")}</p>
+            {form.formState.errors.choicesPerVoter && (
+              <p className="text-sm text-destructive">
+                {form.formState.errors.choicesPerVoter.message}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-3">

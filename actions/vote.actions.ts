@@ -28,8 +28,21 @@ export async function castVote(
     if (poll.releaseAt && new Date() < poll.releaseAt)
       return err("Poll is not yet open for voting");
 
-    if (!poll.allowMultipleVotes && parsed.data.optionIds.length > 1) {
-      return err("This poll only allows selecting one option");
+    // Exact-N enforcement. Fall back to legacy boolean for old polls that
+    // have no choicesPerVoter set.
+    const required =
+      typeof poll.choicesPerVoter === "number" && poll.choicesPerVoter > 0
+        ? poll.choicesPerVoter
+        : poll.allowMultipleVotes
+          ? poll.options.length
+          : 1;
+
+    if (parsed.data.optionIds.length !== required) {
+      return err(
+        `This poll requires exactly ${required} ${
+          required === 1 ? "choice" : "choices"
+        }`
+      );
     }
 
     const validOptionIds = poll.options.map((o) => o._id.toString());

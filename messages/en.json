@@ -35,7 +35,9 @@
     "submit": "Cast Vote",
     "submitting": "Submitting...",
     "selectOne": "Select one option",
-    "selectMany": "Select one or more options"
+    "selectMany": "Select one or more options",
+    "selectExactly": "Select exactly {count} options",
+    "selectedOf": "{selected} of {required} selected"
   },
   "confirmation": {
     "title": "Thank you, {name}!",
@@ -142,7 +144,8 @@
     "titlePlaceholder": "What would you like to ask?",
     "descLabel": "Description (optional)",
     "descPlaceholder": "Add more context...",
-    "multipleVotes": "Allow selecting multiple options",
+    "choicesLabel": "Choices per voter",
+    "choicesHelp": "Each voter must select exactly this many options. Use 1 for single-choice.",
     "anonymous": "Anonymous voting",
     "releaseLabel": "Release Date (optional)",
     "releaseHelp": "Leave blank to make the poll immediately visible. Set a future date to schedule it.",

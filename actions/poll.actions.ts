@@ -38,7 +38,9 @@ export async function createPoll(
         order: i,
       })),
       status: "open",
-      allowMultipleVotes: parsed.data.allowMultipleVotes,
+      choicesPerVoter: parsed.data.choicesPerVoter,
+      // Keep legacy boolean in sync for back-compat with any reader that still uses it.
+      allowMultipleVotes: parsed.data.choicesPerVoter > 1,
       isAnonymous: parsed.data.isAnonymous,
       expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
       releaseAt: parsed.data.releaseAt ? new Date(parsed.data.releaseAt) : null,
@@ -119,8 +121,10 @@ export async function updatePoll(
       }) as typeof poll.options;
     }
     if (parsed.data.status !== undefined) poll.status = parsed.data.status;
-    if (parsed.data.allowMultipleVotes !== undefined)
-      poll.allowMultipleVotes = parsed.data.allowMultipleVotes;
+    if (parsed.data.choicesPerVoter !== undefined) {
+      poll.choicesPerVoter = parsed.data.choicesPerVoter;
+      poll.allowMultipleVotes = parsed.data.choicesPerVoter > 1;
+    }
     if (parsed.data.isAnonymous !== undefined)
       poll.isAnonymous = parsed.data.isAnonymous;
     if (parsed.data.expiresAt !== undefined) {

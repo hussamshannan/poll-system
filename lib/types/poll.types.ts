@@ -10,7 +10,10 @@ export interface Poll {
   description: string;
   options: PollOption[];
   status: "draft" | "open" | "closed";
+  /** @deprecated kept for back-compat; new code reads choicesPerVoter */
   allowMultipleVotes: boolean;
+  /** Number of options each voter must pick (exact count). 1 = single-choice. */
+  choicesPerVoter: number;
   isAnonymous: boolean;
   expiresAt: string | null;
   releaseAt: string | null;
@@ -25,7 +28,7 @@ export interface CreatePollInput {
   title: string;
   description?: string;
   options: { _id?: string; text: string }[];
-  allowMultipleVotes?: boolean;
+  choicesPerVoter?: number;
   isAnonymous?: boolean;
   expiresAt?: string | null;
   releaseAt?: string | null;
@@ -37,7 +40,7 @@ export interface UpdatePollInput {
   description?: string;
   options?: { _id?: string; text: string }[];
   status?: "draft" | "open" | "closed";
-  allowMultipleVotes?: boolean;
+  choicesPerVoter?: number;
   isAnonymous?: boolean;
   expiresAt?: string | null;
   releaseAt?: string | null;

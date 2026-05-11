@@ -11,7 +11,10 @@ export interface IPoll extends Document {
   description: string;
   options: IPollOption[];
   status: "draft" | "open" | "closed";
+  /** @deprecated use choicesPerVoter — kept for legacy reads. */
   allowMultipleVotes: boolean;
+  /** Number of options each voter must pick (exact count). 1 = single-choice. */
+  choicesPerVoter: number;
   isAnonymous: boolean;
   expiresAt: Date | null;
   releaseAt: Date | null;
@@ -38,6 +41,7 @@ const PollSchema = new Schema<IPoll>(
       default: "open",
     },
     allowMultipleVotes: { type: Boolean, default: false },
+    choicesPerVoter: { type: Number, default: 1, min: 1 },
     isAnonymous: { type: Boolean, default: false },
     expiresAt: { type: Date, default: null },
     releaseAt: { type: Date, default: null },
