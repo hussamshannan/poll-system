@@ -48,6 +48,7 @@ export interface PDFTranslations {
   /** Called at render time to format page counters. */
   formatPage: (current: number, total: number) => string;
   voterRecords: string;
+  rowNumber: string;
   name: string;
   phone: string;
   votedFor: string;
@@ -176,6 +177,7 @@ function makeStyles(isRTL: boolean) {
     tableCell: { fontSize: 9, color: BRAND, textAlign },
 
     /* Voter-records column widths */
+    colIndex:    { flex: 0.5, textAlign: "center" as const },
     colName:     { flex: 2 },
     colPhone:    { flex: 2 },
     colVotedFor: { flex: 3 },
@@ -339,6 +341,7 @@ export function AnalyticsPDFDocument({
         ) : (
           <View>
             <View style={s.tableHead}>
+              <Text style={[s.tableHeadCell, s.colIndex]}>{t.rowNumber}</Text>
               <Text style={[s.tableHeadCell, s.colName]}>{t.name}</Text>
               <Text style={[s.tableHeadCell, s.colPhone]}>{t.phone}</Text>
               <Text style={[s.tableHeadCell, s.colVotedFor]}>{t.votedFor}</Text>
@@ -350,6 +353,9 @@ export function AnalyticsPDFDocument({
                 style={i % 2 === 0 ? s.tableRow : s.tableRowAlt}
                 wrap={false}
               >
+                <Text style={[s.tableCell, s.colIndex]}>
+                  {i + 1}
+                </Text>
                 <Text style={[s.tableCell, s.colName]}>
                   {v.voterName ?? ""}
                 </Text>

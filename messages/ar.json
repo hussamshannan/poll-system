@@ -226,6 +226,7 @@
     "footer": "PollApp · تقرير التحليلات",
     "page": "صفحة {current} من {total}",
     "voterRecords": "سجل المصوتين",
+    "rowNumber": "#",
     "name": "الاسم",
     "phone": "الهاتف",
     "votedFor": "صوّت لـ",

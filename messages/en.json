@@ -226,6 +226,7 @@
     "footer": "PollApp · Analytics Report",
     "page": "Page {current} of {total}",
     "voterRecords": "Voter Records",
+    "rowNumber": "#",
     "name": "Name",
     "phone": "Phone",
     "votedFor": "Voted For",

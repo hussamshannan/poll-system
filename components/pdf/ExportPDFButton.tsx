@@ -57,6 +57,7 @@ export function ExportPDFButton({ analytics, pollTitle, pollId }: ExportPDFButto
         formatPage: (current, total) =>
           t("page", { current: String(current), total: String(total) }),
         voterRecords:  t("voterRecords"),
+        rowNumber:     t("rowNumber"),
         name:          t("name"),
         phone:         t("phone"),
         votedFor:      t("votedFor"),
