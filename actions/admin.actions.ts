@@ -17,20 +17,44 @@ import {
   DashboardOverview,
 } from "@/lib/types/admin.types";
 import { requireAdmin } from "@/lib/utils/admin.utils";
-import { normalizePhone, normalizeName } from "@/lib/utils/phone";
+import {
+  clusterDuplicates,
+  type MatchConfidence,
+  type MatchReason,
+} from "@/lib/utils/name-match";
+import { ResolveDuplicateGroupSchema } from "@/lib/validations/admin.schema";
 
 const MASTER_ADMIN_EMAIL = "hussamshannan5@gmail.com";
 
-export interface NormalizeVoterDataResult {
-  scanned: number;
-  phonesNormalized: number;
-  namesNormalized: number;
-  duplicatesRemoved: number;
-  pollsAffected: number;
+export interface DuplicateCandidateVote {
+  _id: string;
+  voterName: string;
+  voterPhone: string;
+  votedAt: string;
+  optionIds: string[];
 }
 
-export async function normalizeVoterData(): Promise<
-  ActionResult<NormalizeVoterDataResult>
+export interface DuplicateGroup {
+  groupId: string;
+  reason: MatchReason;
+  confidence: MatchConfidence;
+  votes: DuplicateCandidateVote[];
+}
+
+export interface DuplicatePollGroup {
+  pollId: string;
+  pollTitle: string;
+  groups: DuplicateGroup[];
+}
+
+export interface DuplicateScanResult {
+  scannedPolls: number;
+  scannedVotes: number;
+  polls: DuplicatePollGroup[];
+}
+
+export async function findDuplicateCandidates(): Promise<
+  ActionResult<DuplicateScanResult>
 > {
   const adminErr = await requireAdmin();
   if (adminErr) return adminErr;
@@ -40,100 +64,145 @@ export async function normalizeVoterData(): Promise<
 
     const votes = await Vote.find({})
       .sort({ pollId: 1, votedAt: 1 })
-      .select("_id pollId voterName voterPhone")
+      .select("_id pollId voterName voterPhone votedAt optionIds")
       .lean();
 
-    const seenPerPoll = new Map<
+    // Group votes by pollId
+    const byPoll = new Map<
       string,
-      { phones: Set<string>; names: Set<string> }
+      Array<{
+        _id: string;
+        voterName: string;
+        voterPhone: string;
+        votedAt: Date;
+        optionIds: import("mongoose").Types.ObjectId[];
+      }>
     >();
-
-    const updates: { id: import("mongoose").Types.ObjectId; voterName: string; voterPhone: string }[] = [];
-    const dupIds: import("mongoose").Types.ObjectId[] = [];
-    const pollsTouched = new Set<string>();
-
-    let phonesNormalized = 0;
-    let namesNormalized = 0;
-
+    let pollCount = 0;
     for (const v of votes) {
-      const pollKey = v.pollId.toString();
-      const seen =
-        seenPerPoll.get(pollKey) ??
-        { phones: new Set<string>(), names: new Set<string>() };
-      seenPerPoll.set(pollKey, seen);
-
-      const np = normalizePhone(v.voterPhone);
-      const nn = normalizeName(v.voterName);
-
-      // Invalid phone after normalization → drop the row
-      if (!np || !nn) {
-        dupIds.push(v._id);
-        pollsTouched.add(pollKey);
-        continue;
-      }
-
-      // Phone or name collides with an earlier vote in the same poll → drop
-      if (seen.phones.has(np) || seen.names.has(nn)) {
-        dupIds.push(v._id);
-        pollsTouched.add(pollKey);
-        continue;
-      }
-
-      seen.phones.add(np);
-      seen.names.add(nn);
-
-      const phoneChanged = np !== v.voterPhone;
-      const nameChanged = nn !== v.voterName;
-      if (phoneChanged) phonesNormalized++;
-      if (nameChanged) namesNormalized++;
-      if (phoneChanged || nameChanged) {
-        updates.push({ id: v._id, voterName: nn, voterPhone: np });
+      const key = v.pollId.toString();
+      const arr = byPoll.get(key);
+      const entry = {
+        _id: v._id.toString(),
+        voterName: v.voterName,
+        voterPhone: v.voterPhone,
+        votedAt: v.votedAt,
+        optionIds: v.optionIds,
+      };
+      if (arr) arr.push(entry);
+      else {
+        byPoll.set(key, [entry]);
+        pollCount++;
       }
     }
 
-    // Apply normalized values to kept votes (batched).
-    if (updates.length > 0) {
-      await Vote.bulkWrite(
-        updates.map((u) => ({
-          updateOne: {
-            filter: { _id: u.id },
-            update: { $set: { voterName: u.voterName, voterPhone: u.voterPhone } },
-          },
-        }))
-      );
+    const affected: Array<{ pollId: string; groups: DuplicateGroup[] }> = [];
+    for (const [pollId, pollVotes] of byPoll) {
+      const clusters = clusterDuplicates(pollVotes);
+      if (clusters.length === 0) continue;
+
+      const groups: DuplicateGroup[] = clusters.map((c) => {
+        const members = [...c.members].sort(
+          (a, b) => a.votedAt.getTime() - b.votedAt.getTime()
+        );
+        const ids = members.map((m) => m._id).sort();
+        return {
+          groupId: ids.join("-"),
+          reason: c.reason,
+          confidence: c.confidence,
+          votes: members.map((m) => ({
+            _id: m._id,
+            voterName: m.voterName,
+            voterPhone: m.voterPhone,
+            votedAt: m.votedAt.toISOString(),
+            optionIds: m.optionIds.map((id) => id.toString()),
+          })),
+        };
+      });
+      affected.push({ pollId, groups });
     }
 
-    // Drop the duplicates / invalid rows.
-    if (dupIds.length > 0) {
-      await Vote.deleteMany({ _id: { $in: dupIds } });
-    }
+    // Fetch titles only for affected polls
+    const affectedPollIds = affected.map((a) => a.pollId);
+    const polls = affectedPollIds.length
+      ? await Poll.find({ _id: { $in: affectedPollIds } })
+          .select("_id title")
+          .lean()
+      : [];
+    const titleMap = new Map(
+      polls.map((p) => [p._id.toString(), p.title])
+    );
 
-    // Recompute Poll.totalVotes only for polls that lost votes.
-    for (const pollKey of pollsTouched) {
-      const remaining = await Vote.countDocuments({ pollId: pollKey });
-      await Poll.findByIdAndUpdate(pollKey, { $set: { totalVotes: remaining } });
-    }
+    const result: DuplicatePollGroup[] = affected.map((a) => ({
+      pollId: a.pollId,
+      pollTitle: titleMap.get(a.pollId) ?? "(deleted poll)",
+      groups: a.groups,
+    }));
 
-    // Now that the data is clean, ensure both unique indexes exist.
-    // syncIndexes drops any indexes the schema no longer declares and
-    // creates any missing ones (including the re-added voterName index).
-    try {
-      await Vote.syncIndexes();
-    } catch (e) {
-      console.error("normalizeVoterData: syncIndexes failed:", e);
-      // Cleanup itself succeeded — surface the partial-success counts anyway.
-    }
+    // High-confidence polls first, then by group count desc
+    result.sort((a, b) => {
+      const aHigh = a.groups.some((g) => g.confidence === "high") ? 1 : 0;
+      const bHigh = b.groups.some((g) => g.confidence === "high") ? 1 : 0;
+      if (aHigh !== bHigh) return bHigh - aHigh;
+      return b.groups.length - a.groups.length;
+    });
 
     return ok({
-      scanned: votes.length,
-      phonesNormalized,
-      namesNormalized,
-      duplicatesRemoved: dupIds.length,
-      pollsAffected: pollsTouched.size,
+      scannedPolls: pollCount,
+      scannedVotes: votes.length,
+      polls: result,
     });
   } catch (error) {
-    console.error("normalizeVoterData error:", error);
-    return err("Failed to normalize voter data");
+    console.error("findDuplicateCandidates error:", error);
+    return err("Failed to scan for duplicates");
+  }
+}
+
+export async function resolveDuplicateGroup(
+  input: unknown
+): Promise<ActionResult<{ removed: number }>> {
+  const adminErr = await requireAdmin();
+  if (adminErr) return adminErr;
+
+  const parsed = ResolveDuplicateGroupSchema.safeParse(input);
+  if (!parsed.success) {
+    return err("Validation failed", parsed.error.flatten().fieldErrors);
+  }
+  const { pollId, keepVoteId, removeVoteIds } = parsed.data;
+
+  try {
+    await connectToDatabase();
+
+    // Verify every id (keep + remove) is on this poll. Defends against a
+    // client that swaps in vote ids from another poll.
+    const allIds = [keepVoteId, ...removeVoteIds];
+    const owned = await Vote.countDocuments({
+      _id: { $in: allIds },
+      pollId,
+    });
+    if (owned !== allIds.length) {
+      return err("Some votes do not belong to this poll");
+    }
+
+    const deletion = await Vote.deleteMany({
+      _id: { $in: removeVoteIds },
+      pollId,
+    });
+
+    if (deletion.deletedCount > 0) {
+      await Poll.findByIdAndUpdate(pollId, {
+        $inc: { totalVotes: -deletion.deletedCount },
+      });
+    }
+
+    revalidatePath("/admin/polls");
+    revalidatePath(`/admin/polls/${pollId}`);
+    revalidatePath("/admin/settings");
+
+    return ok({ removed: deletion.deletedCount });
+  } catch (error) {
+    console.error("resolveDuplicateGroup error:", error);
+    return err("Failed to resolve duplicate group");
   }
 }
 
