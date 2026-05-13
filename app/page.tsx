@@ -18,25 +18,25 @@ export default async function HomePage() {
         <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 lg:grid-cols-[1.05fr_1fr]">
           {/* Left: editorial text column */}
           <section className="flex flex-col justify-center gap-7 px-6 py-14 sm:px-10 md:py-20 lg:ps-16 lg:pe-14 lg:pt-22 lg:pb-18">
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2 text-[14px] font-semibold tracking-[0.01em] text-primary">
+            <span className="rise inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2 text-[14px] font-semibold tracking-[0.01em] text-primary">
               <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.2} />
               {t("badge")}
             </span>
 
-            <h1 className="text-balance text-[clamp(40px,6.5vw,60px)] font-bold leading-[1.05] tracking-[-0.02em]">
+            <h1 className="rise rise-d1 text-balance text-[clamp(40px,6.5vw,60px)] font-bold leading-[1.05] tracking-[-0.02em]">
               {t("headlineOne")}
               <br />
               <span className="text-primary">{t("headlineTwo")}</span>
             </h1>
 
-            <p className="max-w-[520px] text-pretty text-[17px] leading-[1.6] text-muted-foreground sm:text-[19px]">
+            <p className="rise rise-d2 max-w-[520px] text-pretty text-[17px] leading-[1.6] text-muted-foreground sm:text-[19px]">
               {t("lede")}
             </p>
 
-            <div className="flex flex-col items-start gap-2.5">
+            <div className="rise rise-d3 flex flex-col items-start gap-2.5">
               <Link
                 href={routes.vote.list}
-                className="group inline-flex h-14 items-center gap-3.5 rounded-2xl bg-primary px-8 text-[18px] font-bold text-primary-foreground shadow-[0_10px_24px_-16px_color-mix(in_oklch,var(--primary),transparent_30%)] transition-transform hover:translate-y-[-1px] sm:h-[68px] sm:px-9 sm:text-[20px]"
+                className="group inline-flex h-14 items-center gap-3.5 rounded-[14px] bg-primary px-8 text-[18px] font-bold text-primary-foreground shadow-[0_10px_24px_-16px_color-mix(in_oklch,var(--primary),transparent_30%)] transition-transform hover:translate-y-[-1px] sm:h-[68px] sm:px-9 sm:text-[20px]"
               >
                 <span>{t("browseCta")}</span>
                 <ArrowRight
@@ -50,7 +50,7 @@ export default async function HomePage() {
               </span>
             </div>
 
-            <ul className="mt-2 grid max-w-[560px] grid-cols-1 gap-5 border-t border-border/60 pt-5 sm:grid-cols-3">
+            <ul className="rise rise-d4 mt-2 grid max-w-[560px] grid-cols-1 gap-5 border-t border-border/60 pt-5 sm:grid-cols-3">
               {features.map((feature) => (
                 <li key={feature} className="flex flex-col gap-1.5">
                   <span className="inline-flex text-primary">
@@ -65,7 +65,7 @@ export default async function HomePage() {
           </section>
 
           {/* Right: editorial photo column */}
-          <section className="p-6">
+          <section className="rise rise-d2 p-6">
             <div className="relative h-full min-h-[360px] w-full overflow-hidden rounded-[20px] bg-muted ring-1 ring-border/50">
               <Image
                 src="/hero-img.jpg"
