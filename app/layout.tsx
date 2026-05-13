@@ -23,8 +23,32 @@ const arabicFont = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "PollApp — Create & Share Polls",
-  description: "Create polls, collect votes, and view analytics",
+  metadataBase: new URL("https://cbosra-poll.vercel.app"),
+  title: "CBOSRA — Member Voting Portal",
+  description:
+    "Secure member voting portal for the Central Bank of Sudan Retirees Association. Cast your vote on the matters that shape our association.",
+  openGraph: {
+    title: "CBOSRA — Member Voting Portal",
+    description:
+      "Secure member voting portal for the Central Bank of Sudan Retirees Association.",
+    siteName: "CBOSRA",
+    type: "website",
+    images: [
+      {
+        url: "/hero-img.jpg",
+        width: 2400,
+        height: 3067,
+        alt: "Central Bank of Sudan Retirees Association",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CBOSRA — Member Voting Portal",
+    description:
+      "Secure member voting portal for the Central Bank of Sudan Retirees Association.",
+    images: ["/hero-img.jpg"],
+  },
 };
 
 export default async function RootLayout({
