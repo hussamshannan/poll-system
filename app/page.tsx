@@ -45,9 +45,9 @@ export default async function HomePage() {
                   strokeWidth={2}
                 />
               </Link>
-              <span className="text-sm text-muted-foreground">
+              {/* <span className="text-sm text-muted-foreground">
                 {t("browseCtaHint")}
-              </span>
+              </span> */}
             </div>
 
             <ul className="rise rise-d4 mt-2 grid max-w-[560px] grid-cols-1 gap-5 border-t border-border/60 pt-5 sm:grid-cols-3">
