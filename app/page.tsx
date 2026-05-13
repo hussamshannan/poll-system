@@ -65,8 +65,8 @@ export default async function HomePage() {
           </section>
 
           {/* Right: editorial photo column */}
-          <section className="rise rise-d2 p-6">
-            <div className="relative h-full min-h-[360px] w-full overflow-hidden rounded-[20px] bg-muted ring-1 ring-border/50">
+          <section className="rise rise-d2 flex p-6">
+            <div className="relative min-h-90 w-full flex-1 overflow-hidden rounded-4xl bg-muted ring-1 ring-border/50">
               <Image
                 src="/hero-img.jpg"
                 alt={t("photoAlt")}
