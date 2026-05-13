@@ -60,11 +60,6 @@ export default async function HomePage() {
           </div>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t py-6 px-4 text-center text-sm text-muted-foreground">
-        {t("copyright", { year: new Date().getFullYear() })}
-      </footer>
     </div>
   );
 }
