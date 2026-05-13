@@ -45,7 +45,18 @@
     "description": "voting system for organizational decision-making and member engagement.",
     "browsePolls": "Browse Polls",
     "signIn": "Admin Sign In",
-    "copyright": "© {year} PollApp. All rights reserved."
+    "copyright": "© {year} PollApp. All rights reserved.",
+    "badge": "Secure voting · Members only",
+    "headlineOne": "Welcome to",
+    "headlineTwo": "CBOSRA",
+    "lede": "Voting system for organizational decision-making and member engagement. — Open polls are listed below.",
+    "browseCta": "Browse open polls",
+    "browseCtaHint": "You will be asked to confirm your membership number.",
+    "feature1": "End-to-end encrypted ballots",
+    "feature2": "One vote per member",
+    "feature3": "Independently audited",
+    "photoCaption": "CBOSRA members at the 2025 annual gathering",
+    "photoAlt": "Group photograph of CBOSRA members"
   },
   "vote": {
     "title": "Active Polls",
