@@ -599,3 +599,17 @@ html[dir="rtl"] {
   transform: scaleX(-1);
 }
 
+/* ─── Sign-in ambient blobs ─────────────────────────────────────────────── */
+@keyframes signin-drift-1 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(6vmax, 4vmax, 0) scale(1.08); }
+}
+@keyframes signin-drift-2 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-5vmax, -3vmax, 0) scale(1.05); }
+}
+@keyframes signin-drift-3 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to   { transform: translate3d(-4vmax, 3vmax, 0) scale(0.92); }
+}
+
