@@ -7,6 +7,8 @@ export const SiteThemeSchema = z.object({
     "modern-minimal",
     "nature",
     "pastel-dreams",
+    "amber",
+    "coffee",
   ]),
   mode: z.enum(["light", "dark"]),
 });
