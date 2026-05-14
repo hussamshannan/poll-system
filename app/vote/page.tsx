@@ -60,7 +60,7 @@ export default async function VoteListPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-4 py-10">
+        <section className="mx-auto max-w-7xl px-4 py-10">
           <PollGrid
             polls={polls}
             hrefBuilder={(poll) => routes.vote.poll(poll._id)}

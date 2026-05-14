@@ -35,6 +35,7 @@ export function OptionEditor({ control, errors }: OptionEditorProps) {
               {...control.register(`options.${index}.text`)}
               placeholder={t("placeholder", { n: index + 1 })}
               className="flex-1"
+              dir="auto"
             />
             <Button
               type="button"

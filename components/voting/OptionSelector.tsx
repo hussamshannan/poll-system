@@ -56,7 +56,9 @@ export function OptionSelector({
                 (disabled || isLocked) && "opacity-60 cursor-not-allowed"
               )}
             >
-              <span>{option.text}</span>
+              <span dir="auto" className="min-w-0 flex-1 truncate">
+                {option.text}
+              </span>
               {isSelected && <Check className="h-4 w-4 shrink-0 ms-2" />}
             </button>
           );

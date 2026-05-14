@@ -1,15 +1,28 @@
 import { format, formatDistanceToNow } from "date-fns";
+import { ar, enUS, type Locale } from "date-fns/locale";
 
-export function formatDate(date: string | Date): string {
-  return format(new Date(date), "MMM d, yyyy");
+const LOCALES: Record<string, Locale> = { ar, en: enUS };
+
+function resolveLocale(locale?: string): Locale {
+  return (locale && LOCALES[locale]) || enUS;
 }
 
-export function formatDateTime(date: string | Date): string {
-  return format(new Date(date), "MMM d, yyyy 'at' h:mm a");
+export function formatDate(date: string | Date, locale?: string): string {
+  return format(new Date(date), "PP", { locale: resolveLocale(locale) });
 }
 
-export function formatRelative(date: string | Date): string {
-  return formatDistanceToNow(new Date(date), { addSuffix: true });
+export function formatDateTime(date: string | Date, locale?: string): string {
+  return format(new Date(date), "PP p", { locale: resolveLocale(locale) });
+}
+
+export function formatRelative(
+  date: string | Date,
+  locale?: string
+): string {
+  return formatDistanceToNow(new Date(date), {
+    addSuffix: true,
+    locale: resolveLocale(locale),
+  });
 }
 
 export function formatPercent(value: number): string {

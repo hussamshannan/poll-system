@@ -59,9 +59,13 @@ export function VoteSubmit({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-xl">{poll.title}</CardTitle>
+        <CardTitle dir="auto" className="text-xl">
+          {poll.title}
+        </CardTitle>
         {poll.description && (
-          <p className="text-sm text-muted-foreground">{poll.description}</p>
+          <p dir="auto" className="text-sm text-muted-foreground">
+            {poll.description}
+          </p>
         )}
       </CardHeader>
       <CardContent>

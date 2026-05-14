@@ -32,6 +32,7 @@ export function VoterInfoForm({
           placeholder={t("namePlaceholder")}
           disabled={disabled}
           autoFocus
+          dir="auto"
         />
         {errors?.name && (
           <p className="text-sm text-destructive">{errors.name}</p>

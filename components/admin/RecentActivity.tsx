@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { FilePlus, Vote as VoteIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardOverview } from "@/lib/types/admin.types";
@@ -14,6 +14,7 @@ interface RecentActivityProps {
 
 export function RecentActivity({ events }: RecentActivityProps) {
   const t = useTranslations("stats");
+  const locale = useLocale();
 
   return (
     <Card>
@@ -42,7 +43,7 @@ export function RecentActivity({ events }: RecentActivityProps) {
                           })}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatRelative(event.timestamp)}
+                      {formatRelative(event.timestamp, locale)}
                     </p>
                   </div>
                 </div>

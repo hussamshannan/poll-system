@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,6 +28,7 @@ export function VoterTable({
   initialTotal,
 }: VoterTableProps) {
   const t = useTranslations("voterTable");
+  const locale = useLocale();
   const router = useRouter();
   const [voters, setVoters] = useState(initialVoters);
   const [total, setTotal] = useState(initialTotal);
@@ -153,7 +154,11 @@ export function VoterTable({
     {
       key: "name",
       header: t("colName"),
-      render: (v) => <span className="font-medium">{v.voterName}</span>,
+      render: (v) => (
+        <span dir="auto" className="font-medium">
+          {v.voterName}
+        </span>
+      ),
     },
     {
       key: "phone",
@@ -172,6 +177,7 @@ export function VoterTable({
           {v.optionTexts.map((text, i) => (
             <span
               key={i}
+              dir="auto"
               className="inline-block bg-primary/10 text-primary text-xs rounded px-2 py-0.5"
             >
               {text}
@@ -185,7 +191,7 @@ export function VoterTable({
       header: t("colVotedAt"),
       className: "hidden sm:table-cell",
       render: (v) => (
-        <span className="text-muted-foreground">{formatDate(v.votedAt)}</span>
+        <span className="text-muted-foreground">{formatDate(v.votedAt, locale)}</span>
       ),
     },
   ];

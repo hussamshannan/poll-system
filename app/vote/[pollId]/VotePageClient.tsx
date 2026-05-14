@@ -55,7 +55,7 @@ export function VotePageClient({ poll }: VotePageClientProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{poll.title}</CardTitle>
+          <CardTitle dir="auto">{poll.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
@@ -80,7 +80,7 @@ export function VotePageClient({ poll }: VotePageClientProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>{poll.title}</CardTitle>
+          <CardTitle dir="auto">{poll.title}</CardTitle>
         </CardHeader>
         <CardContent className="h-32" />
       </Card>
@@ -96,7 +96,9 @@ export function VotePageClient({ poll }: VotePageClientProps) {
           </div>
           <div>
             <h2 className="text-xl font-bold">{t("alreadyVotedTitle")}</h2>
-            <p className="text-muted-foreground mt-1">{poll.title}</p>
+            <p dir="auto" className="text-muted-foreground mt-1">
+              {poll.title}
+            </p>
           </div>
           <p className="text-sm text-muted-foreground max-w-md">
             {t("alreadyVotedDesc")}

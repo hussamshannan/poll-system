@@ -45,7 +45,7 @@ export function TopPollsPanel({ polls }: TopPollsPanelProps) {
                   >
                     <div className="mb-2 flex items-center justify-between gap-2">
                       <div className="flex min-w-0 flex-1 items-center gap-2">
-                        <span className="truncate font-medium">
+                        <span dir="auto" className="truncate font-medium">
                           {poll.title}
                         </span>
                         <StatusBadge status={effectiveStatus} />

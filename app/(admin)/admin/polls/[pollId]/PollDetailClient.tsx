@@ -56,7 +56,9 @@ export function PollDetailClient({
       {/* Header row */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{pollTitle}</h1>
+          <h1 dir="auto" className="text-2xl font-bold">
+            {pollTitle}
+          </h1>
           <div className="mt-1">
             <StatusBadge
               status={

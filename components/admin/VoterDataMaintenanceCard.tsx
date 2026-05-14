@@ -192,6 +192,7 @@ export function VoterDataMaintenanceCard() {
                         <div className="border-b border-border/60 bg-muted/30 px-4 py-2.5">
                           <Link
                             href={routes.admin.pollDetail(poll.pollId)}
+                            dir="auto"
                             className="text-sm font-semibold hover:underline"
                           >
                             {poll.pollTitle}
@@ -303,7 +304,9 @@ function GroupCard({
                 className="mt-1 accent-primary"
               />
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium">{v.voterName}</div>
+                <div dir="auto" className="text-sm font-medium">
+                  {v.voterName}
+                </div>
                 <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
                     <Phone className="h-3 w-3" />

@@ -33,7 +33,9 @@ export function VoteResult({ title, totalVotes, optionBreakdown }: VoteResultPro
                     className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
                     style={{ backgroundColor: color }}
                   />
-                  <span className="truncate font-medium">{option.text}</span>
+                  <span dir="auto" className="truncate font-medium">
+                    {option.text}
+                  </span>
                 </div>
                 <span className="shrink-0 tabular-nums text-muted-foreground">
                   {option.count} ({formatPercent(option.percentage)})

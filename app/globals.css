@@ -640,3 +640,16 @@ html[dir="ltr"] {
   }
 }
 
+/* ─── Poll card live-dot pulse ──────────────────────────────────────────── */
+@keyframes cbosra-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 4px color-mix(in oklab, currentColor 18%, transparent); }
+  50%      { box-shadow: 0 0 0 7px color-mix(in oklab, currentColor 4%, transparent); }
+}
+.pulse-dot {
+  animation: cbosra-pulse-dot 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot { animation: none; }
+}
+

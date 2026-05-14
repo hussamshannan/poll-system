@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { DateTimeRangePicker } from "@/components/ui/date-time-range-picker";
 import {
   Card,
   CardContent,
@@ -107,6 +108,7 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
                   id="title"
                   {...form.register("title")}
                   placeholder={t("titlePlaceholder")}
+                  dir="auto"
                 />
                 {form.formState.errors.title && (
                   <p className="text-sm text-destructive">
@@ -122,6 +124,7 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
                   {...form.register("description")}
                   placeholder={t("descPlaceholder")}
                   rows={3}
+                  dir="auto"
                 />
               </div>
             </CardContent>
@@ -215,24 +218,21 @@ export function PollForm({ poll, onSubmit, onSuccess }: PollFormProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="releaseAt">{t("releaseLabel")}</Label>
-                <Input
-                  id="releaseAt"
-                  type="datetime-local"
-                  {...form.register("releaseAt")}
+                <Label htmlFor="votingWindow">{t("windowLabel")}</Label>
+                <DateTimeRangePicker
+                  id="votingWindow"
+                  value={{
+                    from: form.watch("releaseAt") ?? null,
+                    to: form.watch("expiresAt") ?? null,
+                  }}
+                  onChange={({ from, to }) => {
+                    form.setValue("releaseAt", from, { shouldDirty: true });
+                    form.setValue("expiresAt", to, { shouldDirty: true });
+                  }}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {t("releaseHelp")}
+                  {t("windowHelp")}
                 </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="expiresAt">{t("expiry")}</Label>
-                <Input
-                  id="expiresAt"
-                  type="datetime-local"
-                  {...form.register("expiresAt")}
-                />
               </div>
             </CardContent>
           </Card>

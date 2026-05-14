@@ -228,13 +228,19 @@
     "choicesHelp": "Each voter must select exactly this many options. Use 1 for single-choice.",
     "anonymous": "Anonymous voting",
     "anonymousHelp": "Hide voter names in public results.",
-    "releaseLabel": "Release Date (optional)",
-    "releaseHelp": "Leave blank to make the poll immediately visible. Set a future date to schedule it.",
-    "expiry": "Expiration (optional)",
+    "windowLabel": "Voting window (optional)",
+    "windowHelp": "Pick when the poll opens and closes. Leave blank to open immediately and never expire.",
     "creating": "Creating...",
     "updating": "Updating...",
     "createBtn": "Create Poll",
     "updateBtn": "Update Poll"
+  },
+  "dateTime": {
+    "rangePlaceholder": "Pick a voting window",
+    "startTime": "Start time",
+    "endTime": "End time",
+    "any": "Any time",
+    "clear": "Clear"
   },
   "optionEditor": {
     "label": "Options",

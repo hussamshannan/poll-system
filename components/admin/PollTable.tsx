@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Trash2, Pencil, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -21,6 +21,7 @@ interface PollTableProps {
 
 export function PollTable({ polls: initialPolls, total, onDelete }: PollTableProps) {
   const t = useTranslations("pollTable");
+  const locale = useLocale();
   const [polls, setPolls] = useState(initialPolls);
   const [deleteTarget, setDeleteTarget] = useState<AdminPoll | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -40,7 +41,11 @@ export function PollTable({ polls: initialPolls, total, onDelete }: PollTablePro
     {
       key: "title",
       header: t("colTitle"),
-      render: (poll) => <span className="font-medium">{poll.title}</span>,
+      render: (poll) => (
+        <span dir="auto" className="font-medium">
+          {poll.title}
+        </span>
+      ),
     },
     {
       key: "status",
@@ -64,7 +69,7 @@ export function PollTable({ polls: initialPolls, total, onDelete }: PollTablePro
       header: t("colCreated"),
       className: "hidden sm:table-cell",
       render: (poll) => (
-        <span className="text-muted-foreground">{formatDate(poll.createdAt)}</span>
+        <span className="text-muted-foreground">{formatDate(poll.createdAt, locale)}</span>
       ),
     },
   ];
