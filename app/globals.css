@@ -9,6 +9,13 @@ html[dir="rtl"] {
   font-family: var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* In LTR (English) mode, keep Geist for Latin text but fall through to the
+   Arabic font so any Arabic glyphs in copy (e.g. example names in admin
+   descriptions) render with proper Arabic shapes instead of system fallback. */
+html[dir="ltr"] {
+  font-family: var(--font-geist-sans), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+}
+
 /* Flip directional icons in RTL */
 [dir="rtl"] [data-dir-flip] {
   transform: scaleX(-1);
