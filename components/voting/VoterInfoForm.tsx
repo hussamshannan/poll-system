@@ -31,6 +31,7 @@ export function VoterInfoForm({
           onChange={(e) => onChange("name", e.target.value)}
           placeholder={t("namePlaceholder")}
           disabled={disabled}
+          autoFocus
         />
         {errors?.name && (
           <p className="text-sm text-destructive">{errors.name}</p>
