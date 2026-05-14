@@ -68,7 +68,7 @@ export default async function HomePage() {
           <section className="rise rise-d2 flex p-6">
             <div className="relative min-h-90 w-full flex-1 overflow-hidden rounded-4xl bg-muted ring-1 ring-border/50">
               <Image
-                src="/hero-img.jpg"
+                src="/hero.jpg"
                 alt={t("photoAlt")}
                 fill
                 priority
