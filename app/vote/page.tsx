@@ -30,16 +30,16 @@ export default async function VoteListPage() {
           <div className="relative mx-auto max-w-5xl px-4 py-12 sm:py-16">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                <h1 className="rise text-3xl font-semibold tracking-tight sm:text-4xl">
                   {t("title")}
                 </h1>
-                <p className="mt-2 text-sm text-muted-foreground sm:text-base">
+                <p className="rise rise-d1 mt-2 text-sm text-muted-foreground sm:text-base">
                   {t("subtitle")}
                 </p>
               </div>
 
               <div className="flex gap-6 sm:gap-8">
-                <div>
+                <div className="rise rise-d2">
                   <div className="text-3xl font-semibold tabular-nums sm:text-4xl">
                     {polls.length}
                   </div>
@@ -47,7 +47,7 @@ export default async function VoteListPage() {
                     {t("statOpenPolls")}
                   </div>
                 </div>
-                <div className="border-s ps-6 sm:ps-8">
+                <div className="rise rise-d3 border-s ps-6 sm:ps-8">
                   <div className="text-3xl font-semibold tabular-nums sm:text-4xl">
                     {totalVotes}
                   </div>

@@ -26,12 +26,17 @@ export function PollGrid({ polls, hrefBuilder, emptyState }: PollGridProps) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {polls.map((poll) => (
-        <PollCard
+      {polls.map((poll, i) => (
+        <div
           key={poll._id}
-          poll={poll}
-          href={hrefBuilder ? hrefBuilder(poll) : undefined}
-        />
+          className="rise"
+          style={{ animationDelay: `${Math.min(i, 11) * 60 + 240}ms` }}
+        >
+          <PollCard
+            poll={poll}
+            href={hrefBuilder ? hrefBuilder(poll) : undefined}
+          />
+        </div>
       ))}
     </div>
   );
