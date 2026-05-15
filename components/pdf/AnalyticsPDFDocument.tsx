@@ -254,9 +254,14 @@ export function AnalyticsPDFDocument({
     day:   "numeric",
   });
 
-  const leader = optionBreakdown[0] ?? null;
+  const leader = optionBreakdown.length
+    ? optionBreakdown.reduce((best, cur) =>
+        (cur.count ?? 0) > (best.count ?? 0) ? cur : best
+      )
+    : null;
+  const hasVotes = (leader?.count ?? 0) > 0;
 
-  const leaderLabel = leader
+  const leaderLabel = hasVotes && leader
     ? (leader.text?.length ?? 0) > 25
       ? (leader.text?.slice(0, 25) ?? "") + "…"
       : `${leader.text ?? ""} (${(leader.percentage ?? 0).toFixed(1)}%)`
