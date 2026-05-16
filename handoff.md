@@ -9,6 +9,8 @@ Polish CBOSRA (Central Bank of Sudan Retirees Association voting portal). The cu
 3. **Arabic content auto-direction**: `dir="auto"` on every input + display surface that holds user-typed content, so Arabic poll titles / options / voter names render RTL even when the UI locale is English.
 4. **RTL polish**: Switch thumb that previously slid off the wrong edge in RTL, plus the calendar/range picker laid out RTL via `dir` + `date-fns/locale/ar`.
 5. **Locale-aware date strings**: `formatRelative` / `formatDate` / `formatDateTime` now accept a `locale` and pull `date-fns/locale/{ar, enUS}`; callers thread `useLocale()` so dates render in Arabic when the app is in Arabic.
+6. **PDF report fix**: the "Leading Option" summary card was picking `optionBreakdown[0]` (first authored option) instead of the highest-count option, and the Arabic label "الخيار الرائد" was awkward.
+7. **Voter polish on `/vote` and `/vote/[pollId]`**: rise-in cascade for the list hero + cards and for the voting form sections; restored the "Vote now" pill click target; auto-detect device language from `Accept-Language` on first visit so a user with an Arabic-only browser lands in Arabic without toggling.
 
 Previous arc (CBOSRA branding, editorial split landing, top nav, smart voter dedup) is shipped and documented further down.
 
@@ -18,13 +20,16 @@ Previous arc (CBOSRA branding, editorial split landing, top nav, smart voter ded
 
 Recent commits (newest first):
 
-- `01262d5` — **Redesign poll card + add range datetime picker and RTL polish** (single landing for this arc; merged from `feat/datetime-picker-poll-form`)
+- `8f02683` — Detect device language from Accept-Language on first visit
+- `f0eeb5b` — Stagger rise-in animation on voting form
+- `868cebe` — Restore Vote now click target by dropping CTA z-index
+- `7649fe6` — Stagger rise-in animation on vote list page
+- `7eef9db` — Update handoff notes for datetime picker + card redesign arc
+- `c2a2032` — Fix leading-option result and wording in PDF export
+- `01262d5` — **Redesign poll card + add range datetime picker and RTL polish** (single landing for the previous arc; merged from `feat/datetime-picker-poll-form`)
 - `747de8b` — Update handoff notes for CBOSRA branding + smart dedup arc
 - `f89b4e3` — Autofocus voter name input on poll open
 - `1d5b490` — Refine Arabic headline (add "رابطة" to org name)
-- `26d8506` — Use new hero image (`public/hero.jpg`) and full Arabic org name in headline
-- `c7ec506` — Top nav redesign + LTR Arabic font fallback
-- `df56a0a` — Replace auto-cleanup with smart duplicate review
 - (earlier landing/dedup work omitted — see previous handoff section)
 
 Everything pushed to `origin/main`. `npx tsc --noEmit` clean. Pre-existing lint warnings unchanged (`form.watch("isAnonymous")` in PollForm; unused eslint-disable in `lib/db/mongoose.ts`).
@@ -80,6 +85,19 @@ Display surfaces:
 - `components/ui/button.tsx` — cosmetic class-order reformatting that the shadcn CLI applied when adding the calendar. Semantically identical; kept.
 - `package.json` + `package-lock.json` — added `react-day-picker@10` (pulled in by `calendar`).
 
+### PDF report fix
+- `components/pdf/AnalyticsPDFDocument.tsx` — leader is now `optionBreakdown.reduce((best, cur) => (cur.count ?? 0) > (best.count ?? 0) ? cur : best)` instead of `optionBreakdown[0]`. Added a `hasVotes` guard so a poll with zero votes renders `"—"` rather than `"<first option> (0.0%)"`. The breakdown coming out of `actions/analytics.actions.ts` is in **authored option order** (built via `poll.options.map`), not sorted by count — so the old `[0]` lookup was wrong whenever the winner wasn't the first option.
+- `messages/ar.json` — `pdf.leadingOption` changed from "الخيار الرائد" (pioneer option, awkward) to "الخيار المتصدر" (the leading/topping option).
+
+### Vote-flow polish
+- `app/vote/page.tsx` — hero title, subtitle, and two stat blocks now carry `rise` / `rise-d1`–`rise-d3` so the header staggers in.
+- `components/polls/PollGrid.tsx` — wraps each card in a `<div className="rise" style={{ animationDelay }}>` with an inline `${Math.min(i, 11) * 60 + 240}ms` delay so cards cascade in after the hero, with the stagger capped at 12 cards so a 50-poll list doesn't fall into the void.
+- `components/voting/VoteSubmit.tsx` — same cascade applied inside the voting form: CardTitle → description → VoterInfoForm → Separator → OptionSelector → Submit button, mapped to `rise rise-d0..d5`.
+- `components/polls/PollCard.tsx` — removed `relative z-20` from the "Vote now" pill span. The card's full-bleed `<Link>` is at `z-10 inset-0`; the CTA was lifted above it and intercepting clicks (the pill looked clickable but did nothing). With z-20 gone, the link's absolute layer is on top in the stacking order and receives the click. Hover styles still trigger via `group-hover:bg-primary` on the parent `<article class="group">`. The `actions` block kept its `relative z-20` because those are real interactive admin buttons that need to override the overlay.
+
+### Device-language auto-detect
+- `i18n/request.ts` — now reads `Accept-Language` from `next/headers` and falls back to the device language when no `locale` cookie exists. Helper `detectFromAcceptLanguage` splits the header (e.g. `ar-SD,ar;q=0.9,en;q=0.8`), walks tags in priority order, and returns `"ar"` if any starts with `ar`, `"en"` if any starts with `en`, else `"en"`. Cookie still wins once set, so a user who toggles language sticks to their pick.
+
 ## Things Attempted That Were Rejected / Rolled Back
 
 - **Single DateTimePicker (just one end)**. First implementation built a per-end date+time picker, swapped two of them into the poll form. User said "use this instead: Range Calendar with time picker" — replaced with one `DateTimeRangePicker`, deleted `components/ui/date-time-picker.tsx`.
@@ -94,6 +112,8 @@ Display surfaces:
 - **Bidi isolation for interpolated names.** `VoteConfirmation` renders `t("title", { name: voterName })` and `t("subtitle", { poll: pollTitle })`. A single `dir="auto"` on the wrapper can't pick correctly for a name embedded inside a translated sentence (mixed-script cases). The right fix is `<bdi>` around the interpolation, which requires either ICU rich-text in next-intl or splitting the translation. Skipped for now.
 - **`isUrgent` threshold is hardcoded** to 24h in `components/polls/PollCard.tsx`. If you want a different cutoff or to surface it from the data, do it here.
 - **`pulse-dot` halo size is fixed at 4px / 7px** in the keyframe. If the dot size in PollCard is tuned, the halo math doesn't auto-scale.
+- **Card stagger caps at 12 items.** `Math.min(i, 11)` in `PollGrid` keeps the cascade tight, but cards beyond the cap arrive together at ~960ms. Fine for the current poll count; revisit if the list ever paginates densely.
+- **No client-side language re-sync.** When the user toggles `LangToggle`, the cookie is set and `revalidatePath('/', 'layout')` re-renders, so future requests use the cookie. But if a user changes their browser's preferred language **after** the cookie is set, the cookie still wins and the app stays on the old locale. Acceptable trade-off (user can re-toggle), but worth knowing.
 
 ## Next Step
 
