@@ -59,11 +59,11 @@ export function VoteSubmit({
   return (
     <Card>
       <CardHeader>
-        <CardTitle dir="auto" className="text-xl">
+        <CardTitle dir="auto" className="rise text-xl">
           {poll.title}
         </CardTitle>
         {poll.description && (
-          <p dir="auto" className="text-sm text-muted-foreground">
+          <p dir="auto" className="rise rise-d1 text-sm text-muted-foreground">
             {poll.description}
           </p>
         )}
@@ -76,26 +76,30 @@ export function VoteSubmit({
             </Alert>
           )}
 
-          <VoterInfoForm
-            name={name}
-            phone={phone}
-            onChange={(field, value) => {
-              if (field === "name") setName(value);
-              else setPhone(value);
-            }}
-            errors={voterErrors}
-            disabled={isPending}
-          />
+          <div className="rise rise-d2">
+            <VoterInfoForm
+              name={name}
+              phone={phone}
+              onChange={(field, value) => {
+                if (field === "name") setName(value);
+                else setPhone(value);
+              }}
+              errors={voterErrors}
+              disabled={isPending}
+            />
+          </div>
 
-          <Separator />
+          <Separator className="rise rise-d3" />
 
-          <OptionSelector
-            options={poll.options}
-            selectedIds={selectedIds}
-            onToggle={handleToggle}
-            choicesPerVoter={poll.choicesPerVoter}
-            disabled={isPending}
-          />
+          <div className="rise rise-d4">
+            <OptionSelector
+              options={poll.options}
+              selectedIds={selectedIds}
+              onToggle={handleToggle}
+              choicesPerVoter={poll.choicesPerVoter}
+              disabled={isPending}
+            />
+          </div>
 
           {fieldErrors?.optionIds && (
             <p className="text-sm text-destructive">
@@ -108,7 +112,7 @@ export function VoteSubmit({
             disabled={
               isPending || selectedIds.length !== poll.choicesPerVoter
             }
-            className="w-full"
+            className="rise rise-d5 w-full"
           >
             {isPending ? t("submitting") : t("submit")}
           </Button>
