@@ -134,7 +134,7 @@ export function PollCard({ poll, href, actions }: PollCardProps) {
           <span className="font-mono text-xs text-muted-foreground">
             {formatRelative(poll.createdAt, locale)}
           </span>
-          <span className="relative z-20 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-colors group-hover:bg-primary sm:px-4.5 sm:py-2.5">
+          <span className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background transition-colors group-hover:bg-primary sm:px-4.5 sm:py-2.5">
             {tv("cardCta")}
             <ArrowRight
               data-dir-flip
