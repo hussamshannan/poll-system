@@ -78,6 +78,11 @@
   },
   "votePage": {
     "expired": "انتهت مدة هذا التصويت ولم يعد يقبل التصويت.",
+    "expiredLabel": "CBOSRA · تصويت الرابطة",
+    "expiredStatus": "Vote Closed · انتهى التصويت",
+    "expiredOpened": "فُتح في",
+    "expiredClosed": "أُغلق في",
+    "expiredVotes": "الأصوات",
     "closed": "هذا التصويت غير مفتوح للتصويت حالياً.",
     "notReleased": "يفتح هذا التصويت في {date}.",
     "submit": "إرسال الصوت",

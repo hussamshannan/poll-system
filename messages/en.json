@@ -78,6 +78,11 @@
   },
   "votePage": {
     "expired": "This poll has expired and is no longer accepting votes.",
+    "expiredLabel": "CBOSRA · Archived Poll",
+    "expiredStatus": "Vote Closed · انتهى التصويت",
+    "expiredOpened": "Opened",
+    "expiredClosed": "Closed",
+    "expiredVotes": "Votes",
     "closed": "This poll is not currently open for voting.",
     "notReleased": "This poll opens on {date}.",
     "submit": "Cast Vote",

@@ -22,7 +22,9 @@ export default async function VotePollPage({ params }: VotePollPageProps) {
       <SiteHeader />
 
       <main className="flex-1 py-10 px-4">
-        <div className="mx-auto max-w-xl">
+        <div
+          className={`mx-auto ${poll.isExpired ? "max-w-4xl" : "max-w-xl"}`}
+        >
           <VotePageClient poll={poll} />
         </div>
       </main>
