@@ -11,6 +11,10 @@ interface CastVoteInput {
   voterPhone: string;
 }
 
+interface SubmitInput extends CastVoteInput {
+  releaseAt: string | null;
+}
+
 interface UseVoteOptions {
   castVoteAction: (
     input: CastVoteInput
@@ -25,13 +29,13 @@ export function useVote({ castVoteAction }: UseVoteOptions) {
   >();
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const submit = (input: CastVoteInput) => {
+  const submit = ({ releaseAt, ...input }: SubmitInput) => {
     setError(null);
     setFieldErrors(undefined);
     startTransition(async () => {
       const result = await castVoteAction(input);
       if (result.success) {
-        markVotedLocally(input.pollId);
+        markVotedLocally(input.pollId, releaseAt);
         setIsSubmitted(true);
       } else {
         setError(result.error);

@@ -4,19 +4,31 @@ function isBrowser(): boolean {
   return typeof window !== "undefined" && !!window.localStorage;
 }
 
-export function hasVotedLocally(pollId: string): boolean {
+function cycleKey(releaseAt: string | null | undefined): string {
+  return releaseAt ?? "always-open";
+}
+
+export function hasVotedLocally(
+  pollId: string,
+  releaseAt: string | null | undefined
+): boolean {
   if (!isBrowser()) return false;
   try {
-    return window.localStorage.getItem(PREFIX + pollId) !== null;
+    const raw = window.localStorage.getItem(PREFIX + pollId);
+    if (!raw) return false;
+    return raw === cycleKey(releaseAt);
   } catch {
     return false;
   }
 }
 
-export function markVotedLocally(pollId: string): void {
+export function markVotedLocally(
+  pollId: string,
+  releaseAt: string | null | undefined
+): void {
   if (!isBrowser()) return;
   try {
-    window.localStorage.setItem(PREFIX + pollId, new Date().toISOString());
+    window.localStorage.setItem(PREFIX + pollId, cycleKey(releaseAt));
   } catch {
     /* private mode / quota errors are non-fatal — server-side uniqueness still applies */
   }

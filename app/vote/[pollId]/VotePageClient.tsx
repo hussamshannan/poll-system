@@ -33,7 +33,7 @@ export function VotePageClient({ poll }: VotePageClientProps) {
 
   const localStatus = useSyncExternalStore<LocalStatus>(
     subscribeNoop,
-    () => (hasVotedLocally(poll._id) ? "alreadyVoted" : "fresh"),
+    () => (hasVotedLocally(poll._id, poll.releaseAt) ? "alreadyVoted" : "fresh"),
     getServerLocalStatus
   );
 
@@ -223,7 +223,13 @@ export function VotePageClient({ poll }: VotePageClientProps) {
             .filter((o) => optionIds.includes(o._id))
             .map((o) => o.text)
         );
-        submit({ pollId: poll._id, optionIds, voterName, voterPhone });
+        submit({
+          pollId: poll._id,
+          optionIds,
+          voterName,
+          voterPhone,
+          releaseAt: poll.releaseAt,
+        });
       }}
       isPending={isPending}
       error={error}
