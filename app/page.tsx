@@ -18,9 +18,8 @@ export default async function HomePage() {
         <div className="grid min-h-[calc(100vh-3.5rem)] grid-cols-1 lg:grid-cols-[1.05fr_1fr]">
           {/* Left: editorial text column */}
           <section className="flex flex-col justify-center gap-7 px-6 py-14 sm:px-10 md:py-20 lg:ps-16 lg:pe-14 lg:pt-22 lg:pb-18">
-            <span className="rise inline-flex w-fit items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3.5 py-2 text-[14px] font-semibold tracking-[0.01em] text-primary">
-              <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.2} />
-              {t("badge")}
+            <span className="rise inline-flex w-fit items-center gap-2 rounded-full borderpx-3.5 py-2 text-[14px] font-semibold tracking-[0.01em] text-primary">
+           
             </span>
 
             <h1 className="rise rise-d1 text-balance text-[clamp(40px,6.5vw,60px)] font-bold leading-[1.05] tracking-[-0.02em]">
